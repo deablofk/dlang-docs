@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dlang-pygments"
+version = "0.1.0"
+description = "Pygments lexer for the DLang systems language"
+requires-python = ">=3.9"
+dependencies = ["Pygments>=2.14"]
+
+[project.entry-points."pygments.lexers"]
+dlang = "dlang_lexer:DLangLexer"
+
+[tool.setuptools]
+py-modules = ["dlang_lexer"]

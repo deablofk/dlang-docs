@@ -1,0 +1,4 @@
+mkdocs-material
+mkdocs-static-i18n
+# custom DLang Pygments lexer (local, editable)
+-e ./dlang-pygments
