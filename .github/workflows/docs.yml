@@ -1,0 +1,24 @@
+# Build the MkDocs site and publish it to the gh-pages branch on every push to
+# main. GitHub Pages then serves it from gh-pages.
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # also allow manual runs from the Actions tab
+
+permissions:
+  contents: write           # needed to push to the gh-pages branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install -r requirements.txt
+      - run: mkdocs gh-deploy --force --no-history
