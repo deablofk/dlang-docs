@@ -37,6 +37,33 @@ saudar :: (nome: string) {
 
 There is no special keyword distinguishing procedures from functions; the absence of a return type is the whole story. This keeps the model minimal — a procedure is just the degenerate case of a function with no result.
 
+## External functions (C interop)
+
+Leave the body off entirely and the declaration becomes an **external** function: you state its name, parameters, and return type, but the implementation lives elsewhere — in a C library linked into the program. The linker binds each call to the C symbol of the same name.
+
+```dlang
+// implemented in libc, not here
+puts :: (s: string) -> int
+
+// implemented in SDL3
+SDL_GetTicks     :: () -> long
+SDL_CreateWindow :: (title: string, w: int, h: int, flags: long) -> Ptr(byte)
+```
+
+A bodiless signature is the *only* thing that marks a function as external — there is no `extern` keyword, just as there is no `func` keyword. Because the name you write **is** the symbol the linker resolves, it must match the C function's exported name exactly (`SDL_Init`, `malloc`, `puts`, …).
+
+At the boundary, DLang types line up with their C counterparts:
+
+| C | DLang |
+|---|-------|
+| `int` / `long` / `float` / `double` | `int` / `long` / `float` / `double` |
+| `bool` | `boolean` |
+| `char *` / `const char *` | `string` (a NUL-terminated byte pointer) |
+| `T *`, opaque handles (`SDL_Window *`) | `Ptr(T)` or `Ptr(byte)` |
+| `NULL` | `null` |
+
+A struct you mean to share with C should mirror its layout — the same field types in the same order — and you pass `ref valor` to hand the function a pointer to it. Calling an external function is otherwise indistinguishable from calling a DLang one. (Variadic C functions such as `printf` are the one exception: declare a fixed-arity wrapper instead.)
+
 ## Default parameter values
 
 A parameter can declare a default value with `=`. If the caller omits that argument, the default is used:

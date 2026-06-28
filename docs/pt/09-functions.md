@@ -37,6 +37,33 @@ saudar :: (nome: string) {
 
 Não há palavra-chave especial distinguindo procedimentos de funções; a ausência de um tipo de retorno é a história inteira. Isso mantém o modelo mínimo — um procedimento é apenas o caso degenerado de uma função sem resultado.
 
+## Funções externas (interoperação com C)
+
+Omita o corpo por completo e a declaração se torna uma função **externa**: você informa o nome, os parâmetros e o tipo de retorno, mas a implementação vive em outro lugar — em uma biblioteca C ligada ao programa. O linker liga cada chamada ao símbolo C de mesmo nome.
+
+```dlang
+// implementada na libc, não aqui
+puts :: (s: string) -> int
+
+// implementadas na SDL3
+SDL_GetTicks     :: () -> long
+SDL_CreateWindow :: (title: string, w: int, h: int, flags: long) -> Ptr(byte)
+```
+
+Uma assinatura sem corpo é a *única* coisa que marca uma função como externa — não existe palavra-chave `extern`, assim como não existe palavra-chave `func`. Como o nome que você escreve **é** o símbolo que o linker resolve, ele precisa coincidir exatamente com o nome exportado pela função C (`SDL_Init`, `malloc`, `puts`, …).
+
+Na fronteira, os tipos de DLang se alinham com os equivalentes em C:
+
+| C | DLang |
+|---|-------|
+| `int` / `long` / `float` / `double` | `int` / `long` / `float` / `double` |
+| `bool` | `boolean` |
+| `char *` / `const char *` | `string` (um ponteiro de bytes terminado em NUL) |
+| `T *`, handles opacos (`SDL_Window *`) | `Ptr(T)` ou `Ptr(byte)` |
+| `NULL` | `null` |
+
+Uma struct que você pretende compartilhar com C deve espelhar o layout dela — os mesmos tipos de campo, na mesma ordem — e você passa `ref valor` para entregar à função um ponteiro para ela. Chamar uma função externa é, no resto, indistinguível de chamar uma de DLang. (Funções C variádicas como `printf` são a única exceção: declare um wrapper de aridade fixa.)
+
 ## Valores padrão de parâmetros
 
 Um parâmetro pode declarar um valor padrão com `=`. Se quem chama omitir esse argumento, o padrão é usado:
