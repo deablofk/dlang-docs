@@ -29,6 +29,36 @@ val i: int = --e   // e diminui primeiro, depois i recebe o novo valor
 
 Como esses operadores mutam o operando, só fazem sentido sobre uma ligação mutável (`var`). Aplicá-los a um `val` imutável é erro de compilação — veja [Variáveis e Escopo](04-variables-and-scope.md) para as regras de mutabilidade.
 
+## Operadores bit a bit
+
+Para trabalhar no nível dos bits, DLang oferece o conjunto convencional do C. Eles operam apenas sobre os tipos inteiros (`byte`, `short`, `int`, `long`) — nunca sobre `float`, `double` ou `boolean` — e, como na aritmética, ambos os operandos já precisam ser do mesmo tipo inteiro:
+
+```dlang
+val band: int = 0b1100 & 0b1010   // 0b1000 — e (and)
+val bor:  int = 0b1100 | 0b1010   // 0b1110 — ou (or)
+val bxor: int = 0b1100 ^ 0b1010   // 0b0110 — ou-exclusivo (xor)
+val bnot: int = ~0                // -1     — não (not, unário)
+val shl:  int = 1 << 4            // 16     — deslocamento à esquerda
+val shr:  int = 256 >> 2          // 64     — deslocamento à direita
+```
+
+Como os inteiros de DLang são todos **com sinal**, `>>` é um deslocamento *aritmético* (que estende o sinal): `-8 >> 1` é `-4`, não um valor positivo grande. Não há operador separado de deslocamento lógico; se você precisa de semântica sem sinal, mascare o resultado explicitamente.
+
+A precedência segue a escada familiar do C, da mais frouxa para a mais firme: `||` < `&&` < `|` < `^` < `&` < `== !=` < `< > <= >=` < `<< >>` < `+ -` < `* / %`. Como sempre, você pode usar parênteses para clareza — `(flags & mask) == mask` lê melhor do que confiar na tabela.
+
+## Bases de literais inteiros
+
+Literais inteiros podem ser escritos em decimal, hexadecimal (`0x`), binário (`0b`) ou octal (`0o`). Um `_` pode ser usado como separador de dígitos em qualquer base, para legibilidade; ele é ignorado pelo compilador:
+
+```dlang
+val mask:  int = 0xFF          // 255
+val flags: int = 0b1010_1010   // 170
+val perms: int = 0o755         // 493
+val big:   long = 0x1_0000_0000 // precisa de `long` — estoura `int`
+```
+
+Um literal ainda é tipado como `int` por padrão, então um valor que não cabe em 32 bits precisa ser anotado (ou sofrer `cast`) para `long`.
+
 ## Operadores são expressões
 
 Como o resto da linguagem, uma expressão aritmética *é* um valor, e os operadores aritméticos participam do design orientado a expressões. Eles são também o exemplo canônico de resolução de operadores em tempo de compilação: para os seus próprios tipos você pode dar significado a `+` (e companhia) definindo `operator_add` e métodos similares, que o compilador resolve com despacho estático de custo zero. Esse mecanismo é coberto em [Sobrecarga de Operadores](27-operator-overloading.md).

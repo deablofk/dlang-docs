@@ -46,7 +46,10 @@ class DLangLexer(RegexLexer):
             (r'"""', String, 'tstring'),
             (r'"', String, 'string'),
             (r'\b\d+\.\d+\b', Number.Float),
-            (r'\b\d+\b', Number.Integer),
+            (r'\b0[xX][0-9a-fA-F_]+\b', Number.Hex),
+            (r'\b0[bB][01_]+\b', Number.Bin),
+            (r'\b0[oO][0-7_]+\b', Number.Oct),
+            (r'\b\d[\d_]*\b', Number.Integer),
             (words(constants, suffix=r'\b'), Keyword.Constant),
             # the universal placeholder '_' (standalone)
             (r'_\b', Name.Builtin.Pseudo),
@@ -60,7 +63,7 @@ class DLangLexer(RegexLexer):
             # the :: definition / compile-time binding operator
             (r'::', Operator),
             (r'->', Operator),
-            (r'[+\-*/%=<>!&|@]+', Operator),
+            (r'[+\-*/%=<>!&|\^~@]+', Operator),
             (r'[.,;:(){}\[\]]', Punctuation),
             (r'[a-zA-Z_]\w*', Name),
         ],

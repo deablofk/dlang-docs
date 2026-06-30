@@ -29,6 +29,8 @@ val pi = 3.14         // inferred double
 val contador: long = 0 // forces long instead of int
 ```
 
+Integer literals may also be written in hexadecimal (`0xFF`), binary (`0b1010`), or octal (`0o17`), with an optional `_` digit separator for readability (`0xDEAD_BEEF`). The base only affects how you write the value, not its type — see [Arithmetic Operators](03-arithmetic-operators.md) for the bitwise operators these literals pair with.
+
 This matters because DLang performs **no implicit numeric conversion**. A `byte` does not silently widen into an `int`, and an `int` does not silently become a `long`. Every cross-type numeric move is written out with `cast(T, x)`. That rule is covered in depth in [Static Typing](29-static-typing.md), but it starts here: the width you declare is the width you get.
 
 ## Design rationale
