@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/index.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/index.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/index.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/01-primitive-types.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/01-primitive-types.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/01-primitive-types.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/02-text-literals.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/02-text-literals.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/02-text-literals.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/03-arithmetic-operators.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/03-arithmetic-operators.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/03-arithmetic-operators.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/04-variables-and-scope.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/04-variables-and-scope.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/04-variables-and-scope.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/05-conditionals.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/05-conditionals.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/05-conditionals.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/06-loops.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/06-loops.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/06-loops.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/07-arrays-and-lists.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/07-arrays-and-lists.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/07-arrays-and-lists.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/08-maps-and-dictionaries.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/08-maps-and-dictionaries.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/08-maps-and-dictionaries.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/09-functions.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/09-functions.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/09-functions.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/10-parameter-passing.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/10-parameter-passing.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/10-parameter-passing.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/11-multiple-returns.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/11-multiple-returns.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/11-multiple-returns.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/12-pointers-and-references.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/12-pointers-and-references.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/12-pointers-and-references.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/13-manual-memory.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/13-manual-memory.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/13-manual-memory.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/14-garbage-collection.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/14-garbage-collection.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/14-garbage-collection.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/15-error-handling.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/15-error-handling.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/15-error-handling.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/16-enumerations.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/16-enumerations.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/16-enumerations.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/17-structs.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/17-structs.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/17-structs.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/18-dynamic-allocation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/18-dynamic-allocation.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/18-dynamic-allocation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/19-modules-and-namespaces.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/19-modules-and-namespaces.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/19-modules-and-namespaces.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/20-classes-and-objects.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/20-classes-and-objects.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/20-classes-and-objects.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/21-constructors-and-destructors.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/21-constructors-and-destructors.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/21-constructors-and-destructors.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/22-encapsulation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/22-encapsulation.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/22-encapsulation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/23-single-inheritance.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/23-single-inheritance.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/23-single-inheritance.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/24-multiple-inheritance.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/24-multiple-inheritance.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/24-multiple-inheritance.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/25-interfaces.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/25-interfaces.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/25-interfaces.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/26-polymorphism.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/26-polymorphism.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/26-polymorphism.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/27-operator-overloading.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/27-operator-overloading.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/27-operator-overloading.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/28-virtual-methods.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/28-virtual-methods.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/28-virtual-methods.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/29-static-typing.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/29-static-typing.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/29-static-typing.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/30-dynamic-typing.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/30-dynamic-typing.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/30-dynamic-typing.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/31-type-inference.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/31-type-inference.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/31-type-inference.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/32-generics.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/32-generics.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/32-generics.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/33-function-pointers.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/33-function-pointers.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/33-function-pointers.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/34-closures.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/34-closures.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/34-closures.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/35-higher-order-functions.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/35-higher-order-functions.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/35-higher-order-functions.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/36-lazy-evaluation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/36-lazy-evaluation.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/36-lazy-evaluation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/37-pattern-matching.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/37-pattern-matching.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/37-pattern-matching.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/38-tuples-and-destructuring.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/38-tuples-and-destructuring.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/38-tuples-and-destructuring.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/39-lambda-expressions.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/39-lambda-expressions.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/39-lambda-expressions.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/40-list-comprehension.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/40-list-comprehension.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/40-list-comprehension.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/41-concurrency.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/41-concurrency.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/41-concurrency.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/42-coroutines-and-promises.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/42-coroutines-and-promises.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/42-coroutines-and-promises.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/43-async-await.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/43-async-await.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/43-async-await.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/44-channels.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/44-channels.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/44-channels.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/45-metaprogramming-and-reflection.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/45-metaprogramming-and-reflection.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/45-metaprogramming-and-reflection.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/46-macros.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/46-macros.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/46-macros.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/47-runtime-compilation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/47-runtime-compilation.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/47-runtime-compilation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/48-dependent-types.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/48-dependent-types.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/48-dependent-types.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/49-theorem-proving.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/49-theorem-proving.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/49-theorem-proving.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/50-c-interop.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/50-c-interop.html"/>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/50-c-interop.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/index.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/index.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/index.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/01-primitive-types.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/01-primitive-types.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/01-primitive-types.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/02-text-literals.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/02-text-literals.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/02-text-literals.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/03-arithmetic-operators.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/03-arithmetic-operators.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/03-arithmetic-operators.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/04-variables-and-scope.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/04-variables-and-scope.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/04-variables-and-scope.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/05-conditionals.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/05-conditionals.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/05-conditionals.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/06-loops.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/06-loops.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/06-loops.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/07-arrays-and-lists.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/07-arrays-and-lists.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/07-arrays-and-lists.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/08-maps-and-dictionaries.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/08-maps-and-dictionaries.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/08-maps-and-dictionaries.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/09-functions.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/09-functions.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/09-functions.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/10-parameter-passing.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/10-parameter-passing.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/10-parameter-passing.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/11-multiple-returns.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/11-multiple-returns.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/11-multiple-returns.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/12-pointers-and-references.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/12-pointers-and-references.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/12-pointers-and-references.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/13-manual-memory.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/13-manual-memory.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/13-manual-memory.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/14-garbage-collection.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/14-garbage-collection.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/14-garbage-collection.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/15-error-handling.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/15-error-handling.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/15-error-handling.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/16-enumerations.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/16-enumerations.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/16-enumerations.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/17-structs.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/17-structs.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/17-structs.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/18-dynamic-allocation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/18-dynamic-allocation.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/18-dynamic-allocation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/19-modules-and-namespaces.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/19-modules-and-namespaces.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/19-modules-and-namespaces.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/20-classes-and-objects.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/20-classes-and-objects.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/20-classes-and-objects.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/21-constructors-and-destructors.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/21-constructors-and-destructors.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/21-constructors-and-destructors.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/22-encapsulation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/22-encapsulation.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/22-encapsulation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/23-single-inheritance.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/23-single-inheritance.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/23-single-inheritance.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/24-multiple-inheritance.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/24-multiple-inheritance.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/24-multiple-inheritance.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/25-interfaces.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/25-interfaces.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/25-interfaces.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/26-polymorphism.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/26-polymorphism.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/26-polymorphism.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/27-operator-overloading.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/27-operator-overloading.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/27-operator-overloading.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/28-virtual-methods.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/28-virtual-methods.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/28-virtual-methods.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/29-static-typing.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/29-static-typing.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/29-static-typing.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/30-dynamic-typing.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/30-dynamic-typing.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/30-dynamic-typing.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/31-type-inference.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/31-type-inference.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/31-type-inference.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/32-generics.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/32-generics.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/32-generics.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/33-function-pointers.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/33-function-pointers.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/33-function-pointers.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/34-closures.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/34-closures.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/34-closures.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/35-higher-order-functions.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/35-higher-order-functions.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/35-higher-order-functions.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/36-lazy-evaluation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/36-lazy-evaluation.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/36-lazy-evaluation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/37-pattern-matching.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/37-pattern-matching.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/37-pattern-matching.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/38-tuples-and-destructuring.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/38-tuples-and-destructuring.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/38-tuples-and-destructuring.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/39-lambda-expressions.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/39-lambda-expressions.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/39-lambda-expressions.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/40-list-comprehension.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/40-list-comprehension.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/40-list-comprehension.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/41-concurrency.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/41-concurrency.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/41-concurrency.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/42-coroutines-and-promises.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/42-coroutines-and-promises.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/42-coroutines-and-promises.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/43-async-await.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/43-async-await.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/43-async-await.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/44-channels.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/44-channels.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/44-channels.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/45-metaprogramming-and-reflection.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/45-metaprogramming-and-reflection.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/45-metaprogramming-and-reflection.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/46-macros.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/46-macros.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/46-macros.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/47-runtime-compilation.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/47-runtime-compilation.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/47-runtime-compilation.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/48-dependent-types.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/48-dependent-types.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/48-dependent-types.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/49-theorem-proving.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/49-theorem-proving.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/49-theorem-proving.html"/>
+    </url>
+    <url>
+        <loc>https://deablofk.github.io/dlang-docs/pt/50-c-interop.html</loc>
+        <lastmod>2026-07-01</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="pt" href="https://deablofk.github.io/dlang-docs/pt/50-c-interop.html"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://deablofk.github.io/dlang-docs/50-c-interop.html"/>
+    </url>
+</urlset>
