@@ -50,6 +50,7 @@ de idioma no topo para mudar para English.)_
 34. [Closures e Funções Anônimas](34-closures.md)
 35. [Funções de Ordem Superior](35-higher-order-functions.md)
 39. [Expressões Lambda](39-lambda-expressions.md)
+50. [Interoperabilidade com C (FFI)](50-c-interop.md)
 
 ### Memória
 12. [Ponteiros e Referências](12-pointers-and-references.md)

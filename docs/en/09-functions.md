@@ -64,6 +64,8 @@ At the boundary, DLang types line up with their C counterparts:
 
 A struct you mean to share with C should mirror its layout — the same field types in the same order — and you pass `ref valor` to hand the function a pointer to it. Calling an external function is otherwise indistinguishable from calling a DLang one. (Variadic C functions such as `printf` are the one exception: declare a fixed-arity wrapper instead.)
 
+For the full picture — linking libraries (`-l`), sharing structs and opaque handles, variadics, and the embedding API — see [C Interoperability (FFI)](50-c-interop.md).
+
 ## Default parameter values
 
 A parameter can declare a default value with `=`. If the caller omits that argument, the default is used:

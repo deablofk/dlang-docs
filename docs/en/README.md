@@ -49,6 +49,7 @@ header to switch to Português.)_
 34. [Closures and Anonymous Functions](34-closures.md)
 35. [Higher-Order Functions](35-higher-order-functions.md)
 39. [Lambda Expressions](39-lambda-expressions.md)
+50. [C Interoperability (FFI)](50-c-interop.md)
 
 ### Memory
 12. [Pointers and References](12-pointers-and-references.md)

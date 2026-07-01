@@ -64,6 +64,8 @@ Na fronteira, os tipos de DLang se alinham com os equivalentes em C:
 
 Uma struct que você pretende compartilhar com C deve espelhar o layout dela — os mesmos tipos de campo, na mesma ordem — e você passa `ref valor` para entregar à função um ponteiro para ela. Chamar uma função externa é, no resto, indistinguível de chamar uma de DLang. (Funções C variádicas como `printf` são a única exceção: declare um wrapper de aridade fixa.)
 
+Para o quadro completo — linkar bibliotecas (`-l`), compartilhar structs e handles opacos, variádicas e a API de embedding — veja [Interoperabilidade com C (FFI)](50-c-interop.md).
+
 ## Valores padrão de parâmetros
 
 Um parâmetro pode declarar um valor padrão com `=`. Se quem chama omitir esse argumento, o padrão é usado:
