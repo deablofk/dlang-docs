@@ -18,11 +18,13 @@ A ligação constante `::` introduz `somar` como uma função conhecida em tempo
 
 ## Importando um módulo
 
-`import("arquivo.dlang")` carrega outro arquivo e retorna seu namespace como um valor. Você liga esse valor a um nome e alcança seus membros através do acesso por ponto.
+`import("caminho")` carrega outro módulo e retorna seu namespace como um valor. Você liga esse valor a um nome e alcança seus membros através do acesso por ponto.
+
+Os caminhos são **relativos à raiz**: a raiz do projeto é o diretório mais próximo acima do seu arquivo que contém um marcador `project.dlang`, e toda importação é resolvida em relação a ela — nunca relativa ao arquivo importador. Não há **`..`** nem **sufixo `.dlang`** (ele é implícito):
 
 ```dlang
-// importação nominativa; retorna o namespace utilizavel (ou bloco, se for namespace { ... })
-val mat = import("matematica.dlang")
+// project.dlang marca a raiz; isto resolve para <raiz>/matematica.dlang
+val mat = import("matematica")
 
 principal :: () {
   val resultado = mat.somar(10, 5)
@@ -30,7 +32,7 @@ principal :: () {
 }
 ```
 
-`import` é uma expressão que produz um valor de namespace de primeira classe, então `mat` é uma ligação comum — não há sintaxe especial de importação para memorizar, e os nomes importados vivem atrás de `mat.` em vez de serem despejados no seu escopo. Isso mantém as origens explícitas: ler `mat.somar` diz exatamente de onde `somar` veio.
+`import` é uma expressão que produz um valor de namespace de primeira classe, então `mat` é uma ligação comum — não há sintaxe especial de importação para memorizar, e os nomes importados vivem **somente** atrás de `mat.`, nunca despejados no seu escopo. Isso mantém as origens explícitas: ler `mat.somar` diz exatamente de onde `somar` veio. A regra é imposta — um `somar` puro de outro módulo é um erro de compilação. Vale também para tipos: um tipo de `mat` é escrito `mat.Tipo`, usável onde um tipo é esperado (anotações, literais `mat.Tipo { .. }`, `mat.Tipo.factory()`).
 
 ## Namespaces internos
 

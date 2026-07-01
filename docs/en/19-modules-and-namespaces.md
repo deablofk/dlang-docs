@@ -18,11 +18,13 @@ The constant binding `::` introduces `somar` as a compile-time-known function (s
 
 ## Importing a module
 
-`import("file.dlang")` loads another file and returns its namespace as a value. You bind that value to a name and reach its members through dot access.
+`import("path")` loads another module and returns its namespace as a value. You bind that value to a name and reach its members through dot access.
+
+Paths are **root-relative**: the project root is the nearest directory above your file that contains a `project.dlang` marker, and every import resolves against it — never relative to the importing file. There is **no `..`** and **no `.dlang` suffix** (it is implicit):
 
 ```dlang
-// nominative import; returns the usable namespace (or block, if it is a namespace { ... })
-val mat = import("matematica.dlang")
+// project.dlang marks the root; this resolves to <root>/matematica.dlang
+val mat = import("matematica")
 
 principal :: () {
   val resultado = mat.somar(10, 5)
@@ -30,7 +32,7 @@ principal :: () {
 }
 ```
 
-`import` is an expression that yields a first-class namespace value, so `mat` is an ordinary binding — there is no special import statement syntax to memorise, and the imported names live behind `mat.` rather than being dumped into your scope. This keeps origins explicit: reading `mat.somar` tells you exactly where `somar` came from.
+`import` is an expression that yields a first-class namespace value, so `mat` is an ordinary binding — there is no special import statement syntax to memorise, and the imported names live **only** behind `mat.`, never dumped into your scope. This keeps origins explicit: reading `mat.somar` tells you exactly where `somar` came from. The rule is enforced — a bare `somar` from another module is a compile error. It applies to types too: a type from `mat` is written `mat.Tipo`, usable anywhere a type is expected (annotations, `mat.Tipo { .. }` literals, `mat.Tipo.factory()`).
 
 ## Inner namespaces
 
