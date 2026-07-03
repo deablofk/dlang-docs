@@ -34,6 +34,55 @@ principal :: () {
 
 `import` is an expression that yields a first-class namespace value, so `mat` is an ordinary binding — there is no special import statement syntax to memorise, and the imported names live **only** behind `mat.`, never dumped into your scope. This keeps origins explicit: reading `mat.somar` tells you exactly where `somar` came from. The rule is enforced — a bare `somar` from another module is a compile error. It applies to types too: a type from `mat` is written `mat.Tipo`, usable anywhere a type is expected (annotations, `mat.Tipo { .. }` literals, `mat.Tipo.factory()`).
 
+## Inline imports
+
+Prefixed access is the default because it keeps origins traceable, but sometimes a module's members are used so often that the prefix is pure noise — a project's own `util` helpers, say. For that, `inline import("path")` splices the target module's top-level members **directly into the current scope**, so you call them unqualified:
+
+```dlang
+// util.dlang defines `shout :: (s: string) -> string`
+
+// prefixed: every call carries the module name
+val util = import("util")
+greet :: () { println(util.shout("hi")) }
+
+// inline: the members land in scope, no prefix
+inline import("util")
+greet :: () { println(shout("hi")) }
+```
+
+The two forms are the *only* two ways to reach another module — there is deliberately no third. `inline import` binds no name (there is no `util` to write), and the same path rules apply: root-relative, no `..`, no `.dlang` suffix. `inline` is a **contextual** keyword — it is only special immediately before `import`, so `inline` remains a perfectly good variable or field name everywhere else.
+
+What gets spliced in is exactly the module's public top-level members — functions, types, constants — the same set you would otherwise reach through a binding. A type imported this way is usable bare, just like a local one:
+
+```dlang
+inline import("shapes")            // shapes.dlang defines `Point`
+
+origin :: (p: Point) -> int = p.x + p.y   // `Point`, not `shapes.Point`
+```
+
+**Names must stay unique.** A program shares one flat top-level namespace, so an inline-imported name may not collide with a name you already declare, nor with a name a *different* inline import provides. A clash is a compile error — never a silent shadow — so the ambiguity is caught at the definition, not left to surface later:
+
+```dlang
+inline import("greet")             // greet.dlang defines `answer :: () -> int = 1`
+
+answer :: () -> int = 2            // error[E_DUPLICATE]: "answer" is already
+                                   // brought in by inline import("greet")
+```
+
+The fix is to keep the prefixed binding for the module whose name conflicts (`val g = import("greet")`, then `g.answer()`), so exactly one `answer` is unqualified. This is the same rule that already governs top-level names across a program; inline import simply makes it explicit at the point of import.
+
+Both forms may target the *same* module at once — reach a member with the prefix in one place and bare in another:
+
+```dlang
+inline import("greet")
+val g = import("greet")
+
+a :: () -> string = shout("x")     // unqualified, via the inline import
+b :: () -> string = g.shout("y")   // prefixed, via the binding
+```
+
+Reach for `inline import` when a module is the vocabulary of the file and the prefix adds nothing; reach for a binding when the origin is worth spelling out at every call. Because an inline import is a compile-time splice with no runtime value, it costs nothing at run time.
+
 ## Inner namespaces
 
 Within one file you can group related declarations under a name using `Nome :: namespace { ... }`. The members are then reached with `Nome.member`, exactly like the members of an imported module.
@@ -58,7 +107,7 @@ The reason `import` and `namespace` feel interchangeable is that they produce th
 
 ## Design rationale
 
-Treating every file as an automatic module removes ceremony: there is nothing to declare and nothing to keep in sync between a file's name and its module name. Making `import` return a first-class namespace value, rather than splicing names into the current scope, keeps every external reference traceable to its source and avoids name collisions by default. Reusing the *same* namespace concept for in-file grouping means there is exactly one mental model — a dotted bag of members — whether you are reaching across files or organising one. Nothing here needs runtime support; it is purely how declarations are named and resolved at compile time.
+Treating every file as an automatic module removes ceremony: there is nothing to declare and nothing to keep in sync between a file's name and its module name. Making `import` return a first-class namespace value, rather than splicing names into the current scope, keeps every external reference traceable to its source and avoids name collisions by default — that is the safe default. `inline import` is the single, explicit opt-out for when a module's members are so pervasive that the prefix only adds noise; making it a distinct keyword means the trade-off (traceability for terseness) is always visible in the source, and there is no *third* way that would erode the one-obvious-path rule. Reusing the *same* namespace concept for in-file grouping means there is exactly one mental model — a dotted bag of members — whether you are reaching across files or organising one. Nothing here needs runtime support; it is purely how declarations are named and resolved at compile time.
 
 ## Related
 
