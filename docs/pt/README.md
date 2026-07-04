@@ -97,3 +97,6 @@ de idioma no topo para mudar para English.)_
 45. [Metaprogramação e Reflexão](45-metaprogramming-and-reflection.md)
 46. [Macros e Expansão de Código](46-macros.md)
 47. [Compilação em Tempo de Execução](47-runtime-compilation.md)
+
+### Ferramentas
+51. [Formatação de Código (dfmt)](51-formatting.md)

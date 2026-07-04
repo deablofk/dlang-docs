@@ -96,3 +96,6 @@ header to switch to Português.)_
 45. [Metaprogramming and Reflection](45-metaprogramming-and-reflection.md)
 46. [Macros and Code Expansion](46-macros.md)
 47. [Runtime Compilation](47-runtime-compilation.md)
+
+### Tooling
+51. [Code Formatting (dfmt)](51-formatting.md)
