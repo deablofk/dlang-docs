@@ -14,14 +14,14 @@ Pessoa :: struct {
 
 criarInimigo :: () {
   val inimigo: Ptr(Pessoa) = New(Pessoa)
-  defer _alloc.free(cast(Ptr(byte), inimigo))
+  defer Undo(inimigo)
 
   inimigo.value.nome = "Orc"
   inimigo.value.idade = 150
 }
 ```
 
-`New(T, n)` aloca `n` valores contíguos em vez de um. `defer _alloc.free(...)` agenda a liberação correspondente quando a função encerra, mantendo alocação e liberação visivelmente pareadas. (`New(T)` é a escrita legível de `_alloc.alloc(T)` de baixo nível; ambas passam pelo alocador atual.)
+`New(T, n)` aloca `n` valores contíguos em vez de um. `defer Undo(p)` agenda a liberação correspondente quando a função encerra, mantendo alocação e liberação visivelmente pareadas. (`New` / `Undo` são as escritas legíveis de `_alloc.alloc(T)` / `_alloc.free(p)` de baixo nível; ambas passam pelo alocador atual.)
 
 ## Contêineres que crescem
 
@@ -68,8 +68,8 @@ Como o alocador é ambiente, uma função auxiliar que você chama aloca no aloc
 val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
 
 val a: Ptr(int) = New(int)
-_alloc.free(cast(Ptr(byte), a))
-_alloc.free(cast(Ptr(byte), a))   // reportado como liberação dupla
+Undo(a)
+Undo(a)   // reportado como liberação dupla
 
 debugReport(context().value)      // alocações / liberações / vazadas / liveBytes / erros
 popAllocator(prev)

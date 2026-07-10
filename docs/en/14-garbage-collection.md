@@ -1,6 +1,6 @@
 # Garbage Collection
 
-DLang has **no garbage collector**, and that is a deliberate design decision, not a missing feature. A systems language should make the cost of memory visible and predictable; a background collector that can pause your program at an unpredictable moment is the opposite of that. Memory in DLang is explicit: you allocate with `New(T)` and free with `_alloc.free(...)` (see [Manual Memory Management](13-manual-memory.md)).
+DLang has **no garbage collector**, and that is a deliberate design decision, not a missing feature. A systems language should make the cost of memory visible and predictable; a background collector that can pause your program at an unpredictable moment is the opposite of that. Memory in DLang is explicit: you allocate with `New(T)` and free with `Undo(p)` (see [Manual Memory Management](13-manual-memory.md)).
 
 What DLang offers *instead* of automatic collection is a way to make manual memory both convenient and checkable: the **context allocator**.
 
@@ -24,8 +24,8 @@ The convenience a GC usually sells — "you won't leak" — DLang provides as an
 val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
 
 val a: Ptr(int) = New(int)
-_alloc.free(cast(Ptr(byte), a))
-_alloc.free(cast(Ptr(byte), a))   // -> reported: invalid or double free
+Undo(a)
+Undo(a)   // -> reported: invalid or double free
 
 debugReport(context().value)      // -> allocs / frees / leaked / errors
 popAllocator(prev)

@@ -1,6 +1,6 @@
 # Coleta de Lixo Automática
 
-DLang **não tem coletor de lixo**, e isso é uma decisão de design deliberada, não uma funcionalidade faltando. Uma linguagem de sistemas deve tornar o custo da memória visível e previsível; um coletor em segundo plano que pode pausar seu programa em um momento imprevisível é o oposto disso. Memória em DLang é explícita: você aloca com `New(T)` e libera com `_alloc.free(...)` (veja [Gerenciamento de Memória Manual](13-manual-memory.md)).
+DLang **não tem coletor de lixo**, e isso é uma decisão de design deliberada, não uma funcionalidade faltando. Uma linguagem de sistemas deve tornar o custo da memória visível e previsível; um coletor em segundo plano que pode pausar seu programa em um momento imprevisível é o oposto disso. Memória em DLang é explícita: você aloca com `New(T)` e libera com `Undo(p)` (veja [Gerenciamento de Memória Manual](13-manual-memory.md)).
 
 O que DLang oferece *no lugar* da coleta automática é um jeito de tornar a memória manual ao mesmo tempo conveniente e verificável: o **alocador de contexto**.
 
@@ -24,8 +24,8 @@ A conveniência que um GC normalmente vende — "você não vai vazar" — DLang
 val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
 
 val a: Ptr(int) = New(int)
-_alloc.free(cast(Ptr(byte), a))
-_alloc.free(cast(Ptr(byte), a))   // -> reportado: liberação inválida ou dupla
+Undo(a)
+Undo(a)   // -> reportado: liberação inválida ou dupla
 
 debugReport(context().value)      // -> alocações / liberações / vazadas / erros
 popAllocator(prev)

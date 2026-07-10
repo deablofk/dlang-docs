@@ -1,6 +1,6 @@
 # Manual Memory Management
 
-DLang never allocates heap memory behind your back. When you want memory that outlives the current stack frame, you ask for it explicitly with `New(T)`, and you return it explicitly with `_alloc.free(...)`. There is no garbage collector: lifetimes are yours to manage.
+DLang never allocates heap memory behind your back. When you want memory that outlives the current stack frame, you ask for it explicitly with `New(T)`, and you return it explicitly with `Undo(p)`. There is no garbage collector: lifetimes are yours to manage.
 
 What makes this ergonomic rather than tedious is that allocation is **ambient** — every allocation draws from the *current allocator*, a swappable value held in a per-program context. You don't thread an allocator through every function; you set it once (or accept the default) and everything downstream uses it. This is the model popularized by Jai, and it is covered in full in [Dynamic Allocation](18-dynamic-allocation.md).
 
@@ -19,12 +19,12 @@ Under the hood `New(T)` is the high-level spelling of the low-level primitive `_
 
 ## Freeing with `defer`
 
-Memory you allocate must be returned. The idiomatic pattern is to pair every allocation with a `defer _alloc.free(...)`, placed immediately after it. `defer` schedules the free to run when the enclosing function exits, no matter which path it takes.
+Memory you allocate must be returned. The idiomatic pattern is to pair every allocation with a `defer Undo(p)`, placed immediately after it. (`Undo` is the high-level free; `_alloc.free(p)` is the low-level primitive underneath, both routing through the context.) `defer` schedules the free to run when the enclosing function exits, no matter which path it takes.
 
 ```dlang
 criarInimigo :: () {
   val inimigo: Ptr(Pessoa) = New(Pessoa)
-  defer _alloc.free(cast(Ptr(byte), inimigo))   // returned at function end
+  defer Undo(inimigo)   // returned at function end
 
   inimigo.value.nome = "Orc"
   inimigo.value.idade = 150

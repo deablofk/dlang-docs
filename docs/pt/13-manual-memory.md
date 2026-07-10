@@ -1,6 +1,6 @@
 # Gerenciamento de Memória Manual
 
-DLang nunca aloca memória na heap pelas suas costas. Quando você quer memória que sobreviva ao quadro de pilha atual, você a pede explicitamente com `New(T)`, e a devolve explicitamente com `_alloc.free(...)`. Não há coletor de lixo: os tempos de vida são seus para gerenciar.
+DLang nunca aloca memória na heap pelas suas costas. Quando você quer memória que sobreviva ao quadro de pilha atual, você a pede explicitamente com `New(T)`, e a devolve explicitamente com `Undo(p)`. Não há coletor de lixo: os tempos de vida são seus para gerenciar.
 
 O que torna isso ergonômico em vez de tedioso é que a alocação é **ambiente** — toda alocação vem do *alocador atual*, um valor trocável mantido em um contexto por-programa. Você não passa um alocador por cada função; você o define uma vez (ou aceita o padrão) e tudo abaixo o utiliza. Esse é o modelo popularizado por Jai, e é detalhado em [Alocação Dinâmica](18-dynamic-allocation.md).
 
@@ -19,12 +19,12 @@ Por baixo dos panos, `New(T)` é a escrita de alto nível da primitiva de baixo 
 
 ## Liberando com `defer`
 
-A memória que você aloca precisa ser devolvida. O padrão idiomático é parear cada alocação com um `defer _alloc.free(...)`, colocado logo depois dela. `defer` agenda a liberação para rodar quando a função encerra, não importa por qual caminho.
+A memória que você aloca precisa ser devolvida. O padrão idiomático é parear cada alocação com um `defer Undo(p)`, colocado logo depois dela. (`Undo` é a liberação de alto nível; `_alloc.free(p)` é a primitiva de baixo nível por baixo, ambas passando pelo contexto.) `defer` agenda a liberação para rodar quando a função encerra, não importa por qual caminho.
 
 ```dlang
 criarInimigo :: () {
   val inimigo: Ptr(Pessoa) = New(Pessoa)
-  defer _alloc.free(cast(Ptr(byte), inimigo))   // devolvida ao fim da função
+  defer Undo(inimigo)   // devolvida ao fim da função
 
   inimigo.value.nome = "Orc"
   inimigo.value.idade = 150

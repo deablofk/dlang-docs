@@ -14,14 +14,14 @@ Pessoa :: struct {
 
 criarInimigo :: () {
   val inimigo: Ptr(Pessoa) = New(Pessoa)
-  defer _alloc.free(cast(Ptr(byte), inimigo))
+  defer Undo(inimigo)
 
   inimigo.value.nome = "Orc"
   inimigo.value.idade = 150
 }
 ```
 
-`New(T, n)` allocates `n` contiguous values instead of one. `defer _alloc.free(...)` schedules the matching free when the function exits, keeping allocation and release visibly paired. (`New(T)` is the readable spelling of the low-level `_alloc.alloc(T)`; both route through the current allocator.)
+`New(T, n)` allocates `n` contiguous values instead of one. `defer Undo(p)` schedules the matching free when the function exits, keeping allocation and release visibly paired. (`New` / `Undo` are the readable spellings of the low-level `_alloc.alloc(T)` / `_alloc.free(p)`; both route through the current allocator.)
 
 ## Growable containers
 
@@ -68,8 +68,8 @@ Because the allocator is ambient, a helper function you call allocates into what
 val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
 
 val a: Ptr(int) = New(int)
-_alloc.free(cast(Ptr(byte), a))
-_alloc.free(cast(Ptr(byte), a))   // reported as a double free
+Undo(a)
+Undo(a)   // reported as a double free
 
 debugReport(context().value)      // allocs / frees / leaked / liveBytes / errors
 popAllocator(prev)
