@@ -33,6 +33,18 @@ popAllocator(prev)
 
 Você instala o alocador de depuração enquanto desenvolve para pegar erros, e simplesmente não o instala em uma build de release — então as verificações custam exatamente nada quando você publica. É a abordagem "copiloto, não imposto": a ferramenta ajuda a achar bugs sem impor um custo permanente de execução.
 
+## Segurança de memória estática (em tempo de compilação, custo zero)
+
+O alocador de depuração pega as *suas* liberações duplas e vazamentos durante o desenvolvimento, mas não impede um ponteiro pendente, e é uma ferramenta de runtime. Além dele, DLang está ganhando um **modelo de segurança de memória estática**: use-after-free, liberação dupla e uso-após-move viram **erros de compilação** — rejeitados antes de o programa poder rodar, com **custo zero em runtime** em builds de release. `Ptr(T)` cru + `Undo` continua como uma válvula de escape explícita, mas os idiomas seguros tornam classes inteiras de bug *impossíveis de expressar* em vez de apenas detectáveis.
+
+O modelo é um híbrido em camadas:
+
+- **Tipos `nocopy`** são *afins*: movidos, não copiados. Usar um depois de ele ter sido consumido — ou liberá-lo duas vezes — é erro de compilação, e seu destrutor (`deinit`) roda automaticamente, exatamente uma vez, no último uso.
+- **Convenções de parâmetro** (`borrow` / `sink` / `inout`) dizem se uma chamada consome um valor ou apenas o empresta, para você poder passar um recurso a um leitor sem abrir mão dele.
+- **Blocos `region { … }`** são arenas lexicais: aloque um grafo inteiro — mesmo cíclico — dentro de uma região e ele é liberado em bloco no fim, com uma verificação estática de que nenhum ponteiro escapa da região.
+
+Veja **[Segurança de Memória](14a-memory-safety.md)** para o modelo completo, com exemplos antes/depois.
+
 ## Por que sem coletor
 
 A maioria das linguagens com coleta de lixo faz do GC o ar que você respira: toda alocação é oculta e gerenciada, e você não pode optar por sair. DLang inverte isso. A alocação é sempre explícita, e o alocador que você instala decide a estratégia. Isso mantém o caminho comum livre da sobrecarga e das pausas do coletor, enquanto o contexto trocável e o alocador de depuração recuperam a maior parte da ergonomia pela qual um GC é valorizado — redirecionar a memória de um subsistema e encontrar vazamentos — sem abrir mão da previsibilidade.

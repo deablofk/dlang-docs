@@ -55,6 +55,7 @@ header to switch to Português.)_
 12. [Pointers and References](12-pointers-and-references.md)
 13. [Manual Memory Management](13-manual-memory.md)
 14. [Garbage Collection](14-garbage-collection.md)
+14a. [Memory Safety](14a-memory-safety.md)
 18. [Dynamic Allocation](18-dynamic-allocation.md)
 
 ### Error handling & modules

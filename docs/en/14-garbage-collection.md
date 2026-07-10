@@ -33,6 +33,18 @@ popAllocator(prev)
 
 You push the debug allocator while developing to catch mistakes, and simply do not push it in a release build — so the checks cost exactly nothing when you ship. This is the "copilot, not a tax" approach: the tool helps you find bugs without imposing a permanent runtime cost.
 
+## Static memory safety (compile-time, zero-cost)
+
+The debug allocator catches *your own* double-frees and leaks while developing, but it cannot stop a dangling pointer, and it is a runtime tool. Beyond it, DLang is growing a **static memory-safety model**: use-after-free, double-free, and use-after-move are turned into **compile-time errors** — rejected before the program can run, at **zero runtime cost** in release builds. Raw `Ptr(T)` + `Undo` remains as an explicit escape hatch, but the safe idioms make whole classes of bug *unrepresentable* rather than merely detectable.
+
+The model is a tiered hybrid:
+
+- **`nocopy` types** are *affine*: moved, not copied. Using one after it has been consumed — or freeing it twice — is a compile error, and its destructor (`deinit`) runs automatically, exactly once, at the last use.
+- **Parameter conventions** (`borrow` / `sink` / `inout`) say whether a call consumes a value or merely borrows it, so you can pass a resource to a reader without giving it up.
+- **`region { … }` blocks** are lexical arenas: allocate a whole graph — even a cyclic one — inside a region and it is bulk-freed at the block's end, with a static check that no pointer escapes the region.
+
+See **[Memory Safety](14a-memory-safety.md)** for the full model, with before/after examples.
+
 ## Why no collector
 
 Most garbage-collected languages make the GC the air you breathe: every allocation is hidden and managed, and you cannot opt out. DLang inverts that. Allocation is always explicit, and the allocator you install decides the strategy. That keeps the common path free of collector overhead and pauses, while the swappable context and the debug allocator recover most of the ergonomics a GC is prized for — redirecting a subsystem's memory, and finding leaks — without giving up predictability.

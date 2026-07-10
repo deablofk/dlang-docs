@@ -56,6 +56,7 @@ de idioma no topo para mudar para English.)_
 12. [Ponteiros e Referências](12-pointers-and-references.md)
 13. [Gerenciamento de Memória Manual](13-manual-memory.md)
 14. [Coleta de Lixo Automática](14-garbage-collection.md)
+14a. [Segurança de Memória](14a-memory-safety.md)
 18. [Alocação Dinâmica](18-dynamic-allocation.md)
 
 ### Tratamento de erros & módulos
