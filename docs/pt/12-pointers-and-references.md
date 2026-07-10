@@ -49,16 +49,29 @@ ptrA.value = 50  // muda o valor da gaveta original que ele aponta
 
 Depois de `ptrA = ptrB`, os dois ponteiros são apelidos do mesmo armazenamento. O `ptrA.value = 50` seguinte, portanto, escreve `50` na célula que ambos agora referenciam. Ler o nome puro do ponteiro compara ou copia endereços; recorrer a `.value` sempre toca os dados subjacentes.
 
+## O ponteiro nulo
+
+`null` é um valor válido para qualquer `Ptr(T)` — é o endereço "não aponta para nada". Use-o como valor inicial ou sentinela, e compare diretamente com `==` / `!=`:
+
+```dlang
+var next: Ptr(Node) = null       // sem cast
+if (next == null) {
+  println("fim da lista")
+}
+```
+
+Como `null` e `== null` funcionam diretamente sobre ponteiros, você nunca precisa escrever `cast(Ptr(T), 0)` para um ponteiro nulo nem `cast(long, p) == cast(long, 0)` para checar nulidade — escreva `null` e `p == null`.
+
 ## Ponteiros para structs
 
 `.value` encadeia naturalmente no acesso a campos, então um ponteiro para uma struct permite alterar campos no lugar:
 
 ```dlang
-val pessoaPtr: Ptr(Pessoa) = _alloc.alloc(Pessoa)
+val pessoaPtr: Ptr(Pessoa) = New(Pessoa)
 pessoaPtr.value.nome = "Gabriel" // altera o campo dentro da struct
 ```
 
-Aqui `_alloc.alloc(Pessoa)` retorna um `Ptr(Pessoa)` apontando para memória recém-reservada. Veja [Gerenciamento de Memória Manual](13-manual-memory.md) para como essa alocação é pareada com `defer _alloc.free(...)`.
+Aqui `New(Pessoa)` retorna um `Ptr(Pessoa)` apontando para memória recém-reservada. Veja [Gerenciamento de Memória Manual](13-manual-memory.md) para como a alocação e a liberação funcionam.
 
 ## Ponteiros de função são diferentes
 

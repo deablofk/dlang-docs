@@ -18,7 +18,7 @@ Jogador.criar :: (nome: string) -> Jogador {
   return Jogador{
     nome: nome,
     vida: 100,
-    inventario: List(string).init(_alloc)
+    inventario: List(string).empty()
   }
 }
 ```
@@ -32,7 +32,7 @@ Alguns valores possuem recursos que precisam ser liberados: uma lista dinâmica 
 ```dlang
 // Destrutor: libera tudo o que este valor possui.
 Jogador.destruir :: () {
-  _.inventario.deinit()                 // libera a lista dinâmica interna
+  _alloc.free(cast(Ptr(byte), _.buffer))   // libera memória própria na heap
   println("${_.nome} foi limpo da memória")
 }
 ```
@@ -57,7 +57,7 @@ jogar :: () {
 }
 ```
 
-Esse é o mesmo padrão que você já usa para memória crua (`defer _alloc.free(p)`) e coleções dinâmicas (`defer itens.deinit()`), descrito em [Alocação Dinâmica](18-dynamic-allocation.md) e [Gerenciamento de Memória Manual](13-manual-memory.md). O par fábrica/`defer destruir()` é simplesmente esse padrão aplicado a uma struct que possui recursos.
+Esse é o mesmo padrão que você já usa para memória crua (`defer _alloc.free(p)`), descrito em [Alocação Dinâmica](18-dynamic-allocation.md) e [Gerenciamento de Memória Manual](13-manual-memory.md). O par fábrica/`defer destruir()` é simplesmente esse padrão aplicado a uma struct que possui recursos.
 
 ## Por quê
 

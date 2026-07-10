@@ -29,6 +29,33 @@ val i: int = --e   // e diminui primeiro, depois i recebe o novo valor
 
 Como esses operadores mutam o operando, só fazem sentido sobre uma ligação mutável (`var`). Aplicá-los a um `val` imutável é erro de compilação — veja [Variáveis e Escopo](04-variables-and-scope.md) para as regras de mutabilidade.
 
+## Atribuição composta
+
+Para o padrão comum de "atualizar uma variável usando o próprio valor", DLang oferece os operadores de atribuição composta convencionais. `x += e` é exatamente um atalho para `x = x + e`, e o mesmo vale para cada operador aritmético e bit a bit:
+
+```dlang
+var total: int = 0
+total += 10   // total = total + 10
+total -= 3    // total = total - 3
+total *= 2    // total = total * 2
+total /= 4    // total = total / 4
+total %= 5    // total = total % 5
+
+var flags: int = 0
+flags |= 4    // liga um bit
+flags &= 6    // mascara bits
+flags ^= 2    // alterna um bit
+```
+
+Eles funcionam sobre qualquer alvo atribuível — um `var` simples, um campo de struct, o `.value` de um ponteiro, um índice:
+
+```dlang
+contador.value.n += 1   // através de um ponteiro
+placar[i] += pontos      // através de um índice
+```
+
+O conjunto completo é `+= -= *= /= %= &= |= ^=`. (As formas de deslocamento `<<=` / `>>=` ainda não estão disponíveis; use `x = x << n` para essas.) Assim como `++`/`--`, a atribuição composta exige um alvo mutável.
+
 ## Operadores bit a bit
 
 Para trabalhar no nível dos bits, DLang oferece o conjunto convencional do C. Eles operam apenas sobre os tipos inteiros (`byte`, `short`, `int`, `long`) — nunca sobre `float`, `double` ou `boolean` — e, como na aritmética, ambos os operandos já precisam ser do mesmo tipo inteiro:
@@ -57,7 +84,25 @@ val perms: int = 0o755         // 493
 val big:   long = 0x1_0000_0000 // precisa de `long` — estoura `int`
 ```
 
-Um literal ainda é tipado como `int` por padrão, então um valor que não cabe em 32 bits precisa ser anotado (ou sofrer `cast`) para `long`.
+Um literal é tipado como `int` por padrão, mas um literal inteiro puro não tem largura *fixa* até o contexto lhe dar uma — então ele **se adapta** ao tipo com que é usado. Um literal que não cabe em 32 bits precisa ser anotado (ou sofrer `cast`) para `long`:
+
+```dlang
+val big: long = 0x1_0000_0000   // o literal adota `long` da anotação
+```
+
+### Adaptação de literal na aritmética
+
+A mesma adaptação se aplica dentro de uma operação binária: um literal inteiro puro assume o tipo inteiro do *outro* operando. Isso faz com que os casos comuns simplesmente funcionem, sem um `cast` no literal:
+
+```dlang
+var n: long = 5
+val m: long = n + 1       // o `1` vira `long`; sem cast
+
+var b: byte = 12
+val masked: byte = b & 0xF   // `0xF` vira `byte`
+```
+
+Apenas *literais* se adaptam. Dois *valores tipados* de larguras diferentes ainda exigem um `cast` explícito — `intVar + longVar` é erro, pois nenhum lado é um literal que o compilador possa retipar. Isso preserva a regra "sem coerção escondida" (veja [Tipagem Estática](29-static-typing.md)) ao mesmo tempo que remove o ruído de dar `cast` em constantes.
 
 ## Operadores são expressões
 

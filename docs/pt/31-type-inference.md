@@ -32,7 +32,7 @@ A inferência também lê o tipo do resultado de uma chamada, então construir u
 
 ```dlang
 val u = Pessoa("Gabriel", 25, true) // inferido Pessoa
-val lista = List(int).init(_alloc)  // inferido List(int)
+val lista = List(int).empty()  // inferido List(int)
 ```
 
 E a variável de laço num `for` é inferida a partir do que está sendo iterado — algo de que você já vinha dependendo implicitamente:

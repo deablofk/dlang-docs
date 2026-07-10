@@ -25,6 +25,18 @@ Um `const val` é uma promessa mais forte: o valor é uma constante verdadeira c
 
 Vale contrastar essas ligações de runtime com a forma `::` que você verá por toda a documentação. `::` liga **constantes de tempo de compilação** — funções, tipos, namespaces — nomes totalmente resolvidos pelo compilador. `val` e `var`, em contraste, nomeiam dados de **runtime**. Assim, `somar :: (...)` define uma função (uma entidade de compile-time), enquanto `val resultado = somar(2, 3)` liga um valor de runtime. Manter isso em sintaxes separadas deixa imediatamente claro, ao ler o código, se um nome se refere a algo fixo na build ou a algo que vive durante a execução.
 
+## Ligações no nível do arquivo
+
+As três formas também podem aparecer no **escopo de arquivo**, fora de qualquer função. Um `const val` (ou `val` simples) no topo é uma constante de tempo de compilação sem armazenamento em execução — cada uso embute o valor. Já um `var` no topo é uma verdadeira **variável global**: tem armazenamento real que persiste por todo o programa e é compartilhado entre funções.
+
+```dlang
+var requestCount: int = 0        // um contador global mutável, compartilhado
+
+bump :: () { requestCount += 1 }
+```
+
+Um `var` global é inicializado com zero por padrão (um inicializador escalar constante como `= 5` é honrado). Um inicializador não-constante **não** é executado no início do programa, então se um global precisa de configuração computada, inicialize-o preguiçosamente no primeiro uso, e não na declaração.
+
 ## Escopo
 
 As ligações têm escopo léxico no bloco em que são declaradas, delimitado por chaves obrigatórias. Um nome introduzido dentro de um bloco é visível da sua declaração até o fim daquele bloco e não além. Como a linguagem é orientada a expressões, os próprios blocos podem produzir valores (veja [Estruturas Condicionais](05-conditionals.md)), mas a regra de visibilidade é a clássica regra léxica: escopos internos enxergam nomes externos, escopos externos não enxergam nomes internos.

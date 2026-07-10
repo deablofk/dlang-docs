@@ -4,12 +4,12 @@ A higher-order function is one that takes a function as an argument or returns o
 
 ## map, filtrar, reduce
 
-`map` transforms each element and produces a new `List`. Note that it does not invent an allocator: it reuses the one the source list already carries (`_.alloc`), so the result lives in the same arena as its source.
+`map` transforms each element and produces a new `List`. It does not take an allocator parameter: the new list grows from the current allocator, the same ambient context every allocation uses (see [Dynamic Allocation](18-dynamic-allocation.md)).
 
 ```dlang
-// map: defined with generics, reuses the allocator the List itself holds
+// map: defined with generics; the new list grows from the current allocator
 List(T).map(R) :: (transform: (T) -> R) -> List(R) {
-  var saida = List(R).init(_.alloc)   // no new allocator: inherits the source list's
+  var saida = List(R).empty()   // grows from the current allocator (ambient context)
   for (item : _) {
     saida.add(transform(item))
   }
@@ -22,7 +22,7 @@ List(T).map(R) :: (transform: (T) -> R) -> List(R) {
 ```dlang
 // filtrar: same input shape, returns a subset
 List(T).filtrar :: (pred: (T) -> boolean) -> List(T) {
-  var saida = List(T).init(_.alloc)
+  var saida = List(T).empty()
   for (item : _) {
     if (pred(item)) saida.add(item)
   }
@@ -48,7 +48,7 @@ So `map` and `filtrar` are *eager* — they run the loop now and materialize a n
 Calling these functions shows the three lambda forms as a ladder of verbosity, from shortest to most explicit:
 
 ```dlang
-var nums = List(int).init(_alloc)
+var nums = List(int).empty()
 // ... nums populated
 
 // 1 argument -> placeholder '_'
@@ -76,10 +76,10 @@ val resultado = nums
 
 ## Returning a function
 
-A higher-order function can also *return* a function. Since the returned function captures local state and outlives its scope, this is an escaping closure and therefore needs an explicit allocator — faithful to the rule from [closures](34-closures.md):
+A higher-order function can also *return* a function. Since the returned function captures local state and outlives its scope, this is an escaping closure and therefore heap-allocates its captured environment from the current allocator — faithful to the rule from [closures](34-closures.md):
 
 ```dlang
-// HOF that returns a function: an escaping closure -> explicit allocator
+// HOF that returns a function: an escaping closure -> heap env from the current allocator
 // returns a function that remembers 'fator'
 multiplicador :: (fator: int) -> Ptr((int) -> int) {
   return _alloc.closure({ _ * fator })   // captures 'fator' and outlives -> allocates
@@ -91,7 +91,7 @@ triplicar.value(10)   // 30 (called via .value, it is a pointer to an allocated 
 
 ## Design rationale
 
-These functions stay in the standard library as plain generic methods, which means the language core has nothing special to know about them. By inheriting the source list's allocator they keep memory ownership obvious, and by having `reduce` allocate nothing they make the cheap aggregation cheap.
+These functions stay in the standard library as plain generic methods, which means the language core has nothing special to know about them. By drawing from the current allocator they need no allocator parameter, and by having `reduce` allocate nothing they keep aggregation cheap.
 
 There is one cost worth registering: a pipeline like `filtrar().map()` creates an **intermediate List at each stage** — each stage allocates. That is precisely the problem the parked lazy-iterator design would solve later by fusing the stages into a single loop. See [Lazy Evaluation](36-lazy-evaluation.md) for that future, parked optimization.
 

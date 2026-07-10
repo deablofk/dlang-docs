@@ -32,7 +32,7 @@ Inference also reads the result type of a call, so constructing a value never fo
 
 ```dlang
 val u = Pessoa("Gabriel", 25, true) // inferred Pessoa
-val lista = List(int).init(_alloc)  // inferred List(int)
+val lista = List(int).empty()  // inferred List(int)
 ```
 
 And the loop variable in a `for` is inferred from the thing being iterated — something you have already been relying on implicitly:

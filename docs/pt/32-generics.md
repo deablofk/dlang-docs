@@ -50,7 +50,7 @@ Você pode chamar com inferência, deixando o compilador recuperar `T` a partir 
 ```dlang
 val m = max(10, 20)        // T = int, inferido dos argumentos
 val x = max(int)(10, 20)   // instancia max(int), depois chama
-val l = List(int).init(_alloc)
+val l = List(int).empty()
 ```
 
 ## Parâmetros de valor em tempo de compilação

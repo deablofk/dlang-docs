@@ -38,7 +38,7 @@ An **eager** method — the current behavior of `List` — runs the `for` immedi
 ```dlang
 // EAGER (current List behavior): the 'for' runs now and materializes
 List(T).map(R) :: (f: (T) -> R) -> List(R) {
-  var saida = List(R).init(_.alloc)
+  var saida = List(R).empty()
   for (item : _) saida.add(f(item))   // <- work happens HERE, now
   return saida
 }

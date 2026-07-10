@@ -9,9 +9,9 @@ de idioma no topo para mudar para English.)_
 - **Orientada a dados, sem OOP** — sem classes, sem herança, sem vtables.
   Comportamento é *açúcar sintático sobre dados*; polimorfismo é feito com
   interfaces estruturais (fat pointers).
-- **Explícito acima de implícito** — alocadores explícitos (`_alloc`, `_gcAlloc`),
-  desreferência de ponteiro explícita via `.value`, executor de concorrência
-  explícito (`_exec`), sem conversões numéricas implícitas, sem alocação de heap
+- **Explícito acima de implícito** — um contexto de alocador ambiente e trocável (`New(T)`, `pushAllocator`),
+  desreferência de ponteiro explícita via `.value`, sem conversões numéricas
+  implícitas (embora literais inteiros puros se adaptem), sem alocação de heap
   escondida.
 - **Custo zero / static dispatch** — generics por monomorfização, interfaces como
   fat pointers, sobrecarga de operadores resolvida inteiramente em compile-time.

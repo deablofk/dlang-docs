@@ -1,10 +1,10 @@
 # Alocação Dinâmica
 
-A alocação dinâmica reserva memória na heap em tempo de execução, para dados cujo tamanho ou tempo de vida não é conhecido em tempo de compilação. Em DLang toda alocação na heap passa por um **alocador explícito** — não há `new` oculto, nem boxing implícito. Você sempre pode apontar para o alocador que produziu um pedaço de memória, e você é responsável por devolvê-lo. A instrução `defer` torna essa limpeza confiável.
+A alocação dinâmica reserva memória na heap em tempo de execução, para dados cujo tamanho ou tempo de vida não é conhecido em tempo de compilação. Em DLang não há `new` oculto nem boxing implícito — mas você também não passa um alocador por cada chamada. Em vez disso, a alocação é **ambiente**: toda alocação na heap vem do *alocador atual*, um valor trocável mantido em um contexto por-programa. Esse é o modelo popularizado por Jai.
 
-## Alocando uma única struct
+## Alocando um único valor
 
-Para colocar uma struct na heap, chame `alloc(Tipo)` em um alocador. O alocador manual padrão é `_alloc`. Ele retorna um `Ptr(Tipo)` — um ponteiro cujo valor você alcança através de `.value`:
+Para colocar um valor na heap, chame `New(T)`. Ele retorna um `Ptr(T)` — um ponteiro cujo conteúdo você acessa por `.value`:
 
 ```dlang
 Pessoa :: struct {
@@ -13,24 +13,23 @@ Pessoa :: struct {
 }
 
 criarInimigo :: () {
-  val inimigo: Ptr(Pessoa) = _alloc.alloc(Pessoa)
-  defer _alloc.free(inimigo)
+  val inimigo: Ptr(Pessoa) = New(Pessoa)
+  defer _alloc.free(cast(Ptr(byte), inimigo))
 
   inimigo.value.nome = "Orc"
   inimigo.value.idade = 150
 }
 ```
 
-O compilador reserva exatamente o tamanho de `Pessoa` na heap. O `defer _alloc.free(inimigo)` agenda a liberação correspondente para rodar quando a função terminar, não importa como ela termine — esse é o idioma que mantém alocação e desalocação visivelmente pareadas no mesmo lugar do código. O acesso a campos passa por `.value` (por exemplo `inimigo.value.nome`), que é o único ponto centralizado onde o compilador pode inserir uma verificação de segurança contra ponteiro nulo antes de você tocar nos dados. Veja [Memória manual](13-manual-memory.md) para o modelo completo de ponteiros e alocadores.
+`New(T, n)` aloca `n` valores contíguos em vez de um. `defer _alloc.free(...)` agenda a liberação correspondente quando a função encerra, mantendo alocação e liberação visivelmente pareadas. (`New(T)` é a escrita legível de `_alloc.alloc(T)` de baixo nível; ambas passam pelo alocador atual.)
 
-## Alocando um contêiner que cresce
+## Contêineres que crescem
 
-Tipos de contêiner como `List(T)` também alocam seu armazenamento de apoio dinamicamente, mas envolvem a contabilidade para você. Você inicializa um entregando-lhe um alocador com `.init(_alloc)`, e o libera com `.deinit()`:
+Tipos de contêiner como `List(T)` e `Map(K, V)` alocam seu armazenamento de base dinamicamente, mas cuidam da contabilidade para você. Você **não** entrega um alocador a eles — eles puxam do mesmo contexto ambiente que toda alocação usa:
 
 ```dlang
 gerenciarInventario :: () {
-  var itens: List(string) = List(string).init(_alloc)
-  defer itens.deinit()
+  var itens: List(string) = List(string).empty()
 
   itens.add("Espada")
   itens.add("Escudo")
@@ -38,23 +37,58 @@ gerenciarInventario :: () {
 }
 ```
 
-`List(string).init(_alloc)` cria uma lista vazia que crescerá na heap conforme você faz `add` de elementos, extraindo toda a sua memória de `_alloc`. O `defer itens.deinit()` pareado devolve essa memória quando a função termina. O mesmo ritmo `init(alocador)` / `defer deinit()` se aplica a outros contêineres de biblioteca como `Map(K, V)`.
+`List(string).empty()` cria uma lista vazia que cresce na heap conforme você faz `add`; `Map(K, V).empty()` se comporta do mesmo jeito. O crescimento interno flui por qualquer que seja o alocador atual, então redirecioná-los é questão de instalar um alocador diferente — não de editar seus pontos de chamada.
 
-## Escolhendo um alocador
+## O alocador atual
 
-O alocador é um parâmetro, não um padrão global embutido na linguagem. Passar `_alloc` significa que você gerencia o tempo de vida por conta própria com `free`/`deinit`. Se você preferir deixar o coletor de lixo rastrear o objeto, aloque com `_gcAlloc` em vez disso e omita o `defer free` — o GC o recupera quando ele se torna inalcançável. Essa escolha está coberta em [Coleta de lixo](14-garbage-collection.md). De qualquer forma, a decisão é explícita no ponto de alocação.
+Um `Allocator` é um único procedimento mais seus dados privados:
 
-## Por quê
+```dlang
+Allocator :: struct {
+  proc: (Ptr(byte), AllocationType, long, Ptr(byte)) -> Ptr(byte)
+  data: Ptr(byte)
+}
+```
 
-Rotear toda alocação na heap por um alocador visível é o cerne da filosofia de memória de DLang: a linguagem nunca aloca pelas suas costas, então o custo de qualquer pedaço de dado é sempre rastreável até um `_alloc` ou `_gcAlloc` que você pode ver. Parear cada alocação com um `defer free` (ou `defer deinit`) mantém aquisição e liberação lado a lado, o que é muito mais difícil de errar do que rastreá-las através de caminhos de `return` distantes. Centralizar o acesso a ponteiros em `.value` dá ao compilador um lugar bem definido para impor a segurança contra nulos, evitando as falhas de segmentação que atormentam C e C++. E como contêineres como `List` e `Map` são structs de biblioteca comuns que recebem um alocador, eles não precisam de suporte especial do compilador — seguem exatamente a mesma disciplina de alocador explícito que um `alloc` feito à mão.
+`context()` retorna o alocador ativo. `mallocAllocator()` é o padrão (baseado na libc). Você instala outro para uma região de código e o restaura depois:
+
+```dlang
+val prev: Allocator = pushAllocator(meuAlocador)
+// ... toda alocação de New / string / List / Map aqui usa meuAlocador ...
+popAllocator(prev)
+```
+
+Como o alocador é ambiente, uma função auxiliar que você chama aloca no alocador que estiver ativo na chamada — sem um parâmetro de alocador a repassar. Essa é a diferença chave do estilo "passe o alocador explicitamente": a estratégia vive em um único lugar, não espalhada por cada assinatura.
+
+## O alocador de depuração
+
+`debugAllocator` envolve qualquer alocador de base, rastreia cada bloco vivo, reporta liberações duplas / inválidas na hora, e deixa `debugReport` listar vazamentos. Instale-o enquanto desenvolve; omita-o em release para custo zero:
+
+```dlang
+val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
+
+val a: Ptr(int) = New(int)
+_alloc.free(cast(Ptr(byte), a))
+_alloc.free(cast(Ptr(byte), a))   // reportado como liberação dupla
+
+debugReport(context().value)      // alocações / liberações / vazadas / liveBytes / erros
+popAllocator(prev)
+```
+
+## Escrevendo seu próprio alocador
+
+Qualquer valor do tipo `Allocator` funciona — um `proc` que trata `AllocationType.ALLOCATE` (retornar `size` bytes) e `AllocationType.FREE` (liberar `oldPtr`), mais o `data` de que seu alocador precisar. Isso deixa você encaixar uma arena, um pool ou um alocador contador e fazer o programa inteiro — biblioteca padrão incluída — usá-lo, apenas empurrando-o no contexto.
+
+## Justificativa de design
+
+A alocação ambiente mantém as duas coisas que um programador de sistemas quer em tensão — controle e conveniência — ambas satisfeitas. Controle: toda alocação continua explícita (`New`, ou um método de contêiner que claramente aloca), e você sempre pode ver e substituir o alocador. Conveniência: você não polui cada assinatura de função com um parâmetro de alocador, e pode mudar a estratégia de memória de um subsistema inteiro a partir de um só lugar. Contêineres como `List` e `Map` não precisam de suporte especial do compilador — são structs genéricos comuns que alocam pelo mesmo contexto que todo o resto.
 
 ## Relacionados
 
 - [Memória manual](13-manual-memory.md)
 - [Coleta de lixo](14-garbage-collection.md)
 - [Ponteiros e referências](12-pointers-and-references.md)
-- [Estruturas de dados](17-structs.md)
+- [Structs](17-structs.md)
 - [Arrays e listas](07-arrays-and-lists.md)
-- [Construtores e destrutores](21-constructors-and-destructors.md)
 
 [← Índice](README.md)

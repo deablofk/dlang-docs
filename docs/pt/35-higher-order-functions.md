@@ -4,12 +4,12 @@ Uma função de ordem superior é aquela que recebe uma função como argumento 
 
 ## map, filtrar, reduce
 
-`map` transforma cada elemento e produz uma nova `List`. Repare que ela não inventa um alocador: reaproveita o que a lista de origem já carrega (`_.alloc`), de modo que o resultado vive na mesma arena que sua fonte.
+`map` transforma cada elemento e produz uma nova `List`. Ela não recebe um parâmetro de alocador: a nova lista cresce a partir do alocador atual, o mesmo contexto ambiente que toda alocação usa (veja [Alocação Dinâmica](18-dynamic-allocation.md)).
 
 ```dlang
-// map: definida com generics, reusa o alocador que a própria List guarda
+// map: definida com generics; a nova lista cresce do alocador atual
 List(T).map(R) :: (transform: (T) -> R) -> List(R) {
-  var saida = List(R).init(_.alloc)   // sem alocador novo: herda o da lista de origem
+  var saida = List(R).empty()   // cresce do alocador atual (contexto ambiente)
   for (item : _) {
     saida.add(transform(item))
   }
@@ -22,7 +22,7 @@ List(T).map(R) :: (transform: (T) -> R) -> List(R) {
 ```dlang
 // filtrar: mesma forma de entrada, devolve um subconjunto
 List(T).filtrar :: (pred: (T) -> boolean) -> List(T) {
-  var saida = List(T).init(_.alloc)
+  var saida = List(T).empty()
   for (item : _) {
     if (pred(item)) saida.add(item)
   }
@@ -48,7 +48,7 @@ Então `map` e `filtrar` são *eager* (ansiosos) — rodam o laço agora e mater
 Chamar essas funções mostra as três formas de lambda como uma escada de verbosidade, da mais curta à mais explícita:
 
 ```dlang
-var nums = List(int).init(_alloc)
+var nums = List(int).empty()
 // ... nums populada
 
 // 1 argumento -> placeholder '_'
@@ -76,10 +76,10 @@ val resultado = nums
 
 ## Retornar uma função
 
-Uma função de ordem superior também pode *retornar* uma função. Como a função retornada captura estado local e sobrevive ao seu escopo, isso é uma closure escapante e portanto precisa de um alocador explícito — fiel à regra de [closures](34-closures.md):
+Uma função de ordem superior também pode *retornar* uma função. Como a função retornada captura estado local e sobrevive ao seu escopo, isso é uma closure escapante e portanto aloca na heap seu ambiente capturado a partir do alocador atual — fiel à regra de [closures](34-closures.md):
 
 ```dlang
-// HOF que retorna uma função: uma closure escapante -> alocador explícito
+// HOF que retorna uma função: uma closure escapante -> env na heap do alocador atual
 // devolve uma função que lembra do 'fator'
 multiplicador :: (fator: int) -> Ptr((int) -> int) {
   return _alloc.closure({ _ * fator })   // captura 'fator' e sobrevive -> aloca
@@ -91,7 +91,7 @@ triplicar.value(10)   // 30 (chamada via .value, pois é ponteiro de closure alo
 
 ## Por quê
 
-Essas funções permanecem na biblioteca padrão como métodos genéricos comuns, o que significa que o núcleo da linguagem não precisa saber nada de especial sobre elas. Ao herdar o alocador da lista de origem, mantêm a posse da memória óbvia, e ao fazer `reduce` não alocar nada, mantêm a agregação barata barata.
+Essas funções permanecem na biblioteca padrão como métodos genéricos comuns, o que significa que o núcleo da linguagem não precisa saber nada de especial sobre elas. Ao tirar do alocador atual, dispensam um parâmetro de alocador, e ao fazer `reduce` não alocar nada, mantêm a agregação barata.
 
 Há um custo que vale registrar: um pipeline como `filtrar().map()` cria uma **List intermediária em cada estágio** — cada estágio aloca. É exatamente o problema que o desenho parqueado de iteradores lazy resolveria depois, fundindo os estágios num único laço. Veja [Avaliação Preguiçosa](36-lazy-evaluation.md) para essa otimização futura e parqueada.
 

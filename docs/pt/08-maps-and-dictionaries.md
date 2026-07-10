@@ -1,6 +1,6 @@
 # Tabelas e Dicionários
 
-Um mapa associa chaves a valores. DLang oferece duas ferramentas complementares: um **literal de mapa fixo** embutido diretamente na linguagem e um **`Map(K, V)` dinâmico** que vive na biblioteca padrão. Essa divisão espelha a filosofia usada para arrays e listas — o compilador conhece a forma pequena, de tamanho estático, enquanto o crescimento ao longo do tempo é um tipo de biblioteca que você adota com um alocador explícito.
+Um mapa associa chaves a valores. DLang oferece duas ferramentas complementares: um **literal de mapa fixo** embutido diretamente na linguagem e um **`Map(K, V)` dinâmico** que vive na biblioteca padrão. Essa divisão espelha a filosofia usada para arrays e listas — o compilador conhece a forma pequena, de tamanho estático, enquanto o crescimento ao longo do tempo é um tipo de biblioteca que tira do alocador atual (ambiente).
 
 ## Mapas fixos
 
@@ -24,7 +24,7 @@ keyValueMap["maça"] = 20
 val preco: int = keyValueMap["banana"]
 ```
 
-Como a capacidade é fixa, você não pode adicionar chaves totalmente novas além de `N` — a forma com colchetes atualiza entradas existentes. Quando precisar crescer, recorra ao `Map` dinâmico.
+Como a capacidade é fixa, você não pode adicionar chaves totalmente novas além de `N` — a forma com colchetes atualiza entradas existentes. A busca é uma varredura linear que compara chaves com `==` (então chaves `string`, chaves de enum e chaves inteiras funcionam); se a chave não existe, a leitura devolve um valor zero. Quando precisar crescer, recorra ao `Map` dinâmico.
 
 ### Iteração
 
@@ -40,21 +40,22 @@ Essa é a mesma maquinaria de desestruturação usada em todo o restante da ling
 
 ## Mapas dinâmicos
 
-Quando o conjunto de chaves não é conhecido de antemão, use `Map(K, V)`. Ele é uma struct genérica normal da biblioteca padrão — **não** um recurso embutido no compilador — e portanto segue a mesma disciplina de alocador explícito que `List`. Você o constrói entregando um alocador, e ele cresce sob demanda.
+Quando o conjunto de chaves não é conhecido de antemão, use `Map(K, V)`. Ele é uma struct genérica normal da biblioteca padrão — **não** um recurso embutido no compilador — construída a partir dos mesmos generics e sobrecarga de operadores que todo outro contêiner usa.
 
 ```dlang
-var mapa: Map(string, int) = Map(string, int).init(_alloc)
+var mapa: Map(string, int) = Map(string, int).empty()
 
-mapa.put("banana", 30)
+mapa.set("banana", 30)              // insere ou sobrescreve
+val preco: int = mapa.get("banana") // lê de volta
 ```
 
-`put` insere uma nova chave ou sobrescreve uma existente, fazendo o armazenamento interno crescer quando a chave está ausente. Como tudo isso é código de biblioteca, não há comportamento oculto: o alocador que você passa é exatamente de onde a memória vem. Use `_alloc` para o alocador manual padrão, ou `_gcAlloc` se quiser que o coletor de lixo gerencie seu tempo de vida.
+`.set(k, v)` insere uma nova chave ou sobrescreve uma existente, fazendo o armazenamento interno crescer quando a chave está ausente; `.get(k)` lê de volta (a busca é uma varredura linear por `==`). Outros métodos incluem `.contains(k)`, `.remove(k)`, `.size()`, `.keyAt(i)` / `.valueAt(i)`, além de `operator_get` / `operator_set`, então `mapa["k"]` e `mapa["k"] = v` também funcionam.
 
-Como qualquer tipo apoiado em alocador, um mapa dinâmico deve ser liberado quando você terminar (tipicamente via `defer mapa.deinit()`), em consonância com os padrões mostrados em [Alocação dinâmica](18-dynamic-allocation.md).
+A memória em que um `Map` cresce vem do **alocador atual** — o contexto de memória ambiente e trocável de DLang (veja [Alocação dinâmica](18-dynamic-allocation.md)), não um alocador que você passa à mão.
 
 ## Por quê
 
-Dividir mapas em um literal fixo mais um tipo de biblioteca mantém a linguagem pequena ao mesmo tempo que honra **explícito > implícito**. A forma fixa é genuinamente de custo zero: seu tamanho está no tipo, então o compilador pode dispô-la inline e até resolver consultas em tempo de compilação. A forma dinâmica nunca aloca pelas suas costas — você sempre pode apontar para o `_alloc` (ou `_gcAlloc`) que possui sua memória. E como `Map(K, V)` é uma struct genérica comum, ela não exige nenhuma mágica especial do compilador: é construída a partir dos mesmos generics, sobrecarga de operadores (`operator_get` / `operator_set`) e convenções de alocador que todo outro contêiner usa.
+Dividir mapas em um literal fixo mais um tipo de biblioteca mantém a linguagem pequena. A forma fixa é genuinamente de custo zero: seu tamanho está no tipo, então o compilador a dispõe inline (na pilha, em um campo de struct ou em um global) sem alocação na heap. A forma dinâmica tira seu armazenamento do alocador atual, então seu modelo de memória é o mesmo contexto trocável que todo outro contêiner usa — e como `Map(K, V)` é uma struct genérica comum, não exige mágica especial do compilador: é construída a partir dos mesmos generics e sobrecarga de operadores (`operator_get` / `operator_set`) que todo o resto.
 
 ## Relacionados
 

@@ -1,55 +1,46 @@
 # Garbage Collection
 
-DLang gives you a second allocator for when you would rather not track lifetimes by hand: `_gcAlloc`. It has the same shape as the manual allocator — `_gcAlloc.alloc(T)` returns a `Ptr(T)` — but the memory it hands out is managed for you. There is no matching `free`, and no `defer` is required. The garbage collector watches the pointer and reclaims the object when nothing references it any more.
+DLang has **no garbage collector**, and that is a deliberate design decision, not a missing feature. A systems language should make the cost of memory visible and predictable; a background collector that can pause your program at an unpredictable moment is the opposite of that. Memory in DLang is explicit: you allocate with `New(T)` and free with `_alloc.free(...)` (see [Manual Memory Management](13-manual-memory.md)).
 
-Crucially, garbage collection is *opt-in per allocation*. The language has no hidden global GC: memory becomes garbage-collected only because you asked for it with `_gcAlloc` instead of [`_alloc`](13-manual-memory.md). Both styles coexist in the same program.
+What DLang offers *instead* of automatic collection is a way to make manual memory both convenient and checkable: the **context allocator**.
 
-## Allocating with the GC
+## The swappable context allocator
 
-You use `_gcAlloc` exactly like the manual allocator, then access the result through `.value` (see [Pointers and References](12-pointers-and-references.md)).
-
-```dlang
-// allocating using the garbage collector's allocator
-val p: Ptr(Pessoa) = _gcAlloc.alloc(Pessoa)
-p.value.nome = "Bruno"
-
-// no 'defer _gcAlloc.free(p)' needed.
-// the GC tracks 'p' and erases it from the heap when the function ends.
-```
-
-The only visible difference from manual allocation is the missing `defer free`. The `Ptr(Pessoa)` behaves identically: same `.value` access, same null-checked safety checkpoint.
-
-## How collection works
-
-DLang's collector combines two mechanisms. The primary one is **reference counting** in the style of Swift and Wren: every GC-allocated object carries an internal counter that tracks how many references point at it. When the count reaches zero, the object is freed promptly.
-
-Reference counting alone cannot reclaim *reference cycles* — objects that point at each other but are unreachable from the rest of the program. To handle these, a **background sweep** runs periodically, scanning for orphaned objects and clearing them all at once.
+Every allocation — `New(T)`, and every implicit allocation inside `string`, `List`, and `Map` — draws from the *current allocator*, a value held in a per-program context. The default is a plain libc-`malloc` allocator, but you can install a different one for a region of code with `pushAllocator` / `popAllocator`. This is what replaces "which GC manages this object": you decide *how* memory is managed by choosing the allocator, not by hoping a collector cleans up later.
 
 ```dlang
-// Reference counting in the Swift/Wren style: each object keeps an internal
-// counter. In addition, tracking runs in the background from time to time,
-// looking for orphaned objects and cleaning them all up in one pass.
+val prev: Allocator = pushAllocator(myAllocator)
+// ... every allocation in here uses myAllocator ...
+popAllocator(prev)
 ```
 
-This hybrid keeps the common case cheap and deterministic (a counter increment/decrement) while still guaranteeing that cyclic garbage eventually goes away.
+Because the choice lives at the allocator level, a whole subsystem's memory strategy can be changed without touching a single allocation site.
 
-## Choosing between `_alloc` and `_gcAlloc`
+## Catching leaks and double-frees
 
-Both allocators produce the same `Ptr(T)` type, so the choice is purely about who owns the lifetime:
+The convenience a GC usually sells — "you won't leak" — DLang provides as an opt-in *checking* tool rather than a runtime tax. `debugAllocator` wraps any backing allocator, records every live block, and reports double or invalid frees as they happen; `debugReport` lists what is still live (leaked) at the end.
 
-- Reach for [`_alloc`](13-manual-memory.md) when you want deterministic, zero-overhead control and are happy to write `defer free`. This is the default for hot paths and tight resource budgets.
-- Reach for `_gcAlloc` when the ownership graph is complicated or lifetimes are hard to pin down, and the convenience of automatic reclamation outweighs the counter overhead.
+```dlang
+val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
 
-Because the decision lives at the call site, a single program can use manual memory for its performance-critical core and the GC for its messier, less hot data, with both kinds of pointer interoperating freely.
+val a: Ptr(int) = New(int)
+_alloc.free(cast(Ptr(byte), a))
+_alloc.free(cast(Ptr(byte), a))   // -> reported: invalid or double free
 
-## Design rationale
+debugReport(context().value)      // -> allocs / frees / leaked / errors
+popAllocator(prev)
+```
 
-Most garbage-collected languages make the GC the air you breathe: every allocation is hidden and managed, and you cannot opt out. DLang inverts that. Allocation is always explicit, and *which* allocator you name decides the lifetime model. Keeping `_gcAlloc` symmetric with `_alloc` — same `alloc`, same `Ptr(T)`, same `.value` — means the two strategies are interchangeable at the type level, so you pay for garbage collection only exactly where you write `_gcAlloc`, and nowhere else.
+You push the debug allocator while developing to catch mistakes, and simply do not push it in a release build — so the checks cost exactly nothing when you ship. This is the "copilot, not a tax" approach: the tool helps you find bugs without imposing a permanent runtime cost.
+
+## Why no collector
+
+Most garbage-collected languages make the GC the air you breathe: every allocation is hidden and managed, and you cannot opt out. DLang inverts that. Allocation is always explicit, and the allocator you install decides the strategy. That keeps the common path free of collector overhead and pauses, while the swappable context and the debug allocator recover most of the ergonomics a GC is prized for — redirecting a subsystem's memory, and finding leaks — without giving up predictability.
 
 ## Related
 
-- [Pointers and References](12-pointers-and-references.md)
 - [Manual Memory Management](13-manual-memory.md)
 - [Dynamic Allocation](18-dynamic-allocation.md)
+- [Pointers and References](12-pointers-and-references.md)
 
 [← Index](README.md)

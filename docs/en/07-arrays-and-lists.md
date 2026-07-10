@@ -1,6 +1,6 @@
 # Arrays and Native Lists
 
-DLang distinguishes two kinds of sequential collection, and the distinction is deliberate and visible. A **fixed-size array** is a compiler-level type whose length is part of its type and known at compile time. A **dynamic list** is an ordinary standard-library type, `List(T)`, that grows at runtime using an explicit allocator. Neither hides a heap allocation from you.
+DLang distinguishes two kinds of sequential collection, and the distinction is deliberate and visible. A **fixed-size array** is a compiler-level type whose length is part of its type and known at compile time. A **dynamic list** is an ordinary standard-library type, `List(T)`, that grows at runtime, drawing its memory from the current allocator. Neither hides a heap allocation from you.
 
 ## Fixed-size arrays
 
@@ -25,11 +25,11 @@ val nomes: []string = ["gabriel", "bruno"]   // implicitly [2]string
 When the number of elements is not known until runtime, you reach for `List(T)`. Crucially, `List(T)` is **not** compiler magic — it is a normal generic struct provided by the standard library, the same kind of type you could write yourself. What makes it dynamic is that it owns a growable buffer, and growing that buffer means allocating memory. DLang never allocates implicitly, so you hand the list an allocator when you create it:
 
 ```dlang
-var lista: List(int) = List(int).init(_alloc)   // _alloc = default allocator
+var lista: List(int) = List(int).empty()   // _alloc = default allocator
 lista.add(10)
 ```
 
-`List(int).init(_alloc)` constructs an empty list backed by the default allocator `_alloc`. You could pass any allocator here instead — that is the whole point of making the allocator explicit. `lista.add(10)` appends an element, growing the backing buffer if needed. Because the list owns heap memory, you are responsible for releasing it (typically with `defer lista.deinit()`); the details of allocation and cleanup are covered in [Dynamic Allocation](18-dynamic-allocation.md) and [Manual Memory](13-manual-memory.md).
+`List(int).empty()` constructs an empty list. Its backing storage grows from the **current allocator** — DLang's ambient, swappable memory context — so you never thread an allocator through by hand; installing a different allocator redirects the list's memory too. `lista.add(10)` appends an element, growing the backing buffer if needed. The allocator model is covered in [Dynamic Allocation](18-dynamic-allocation.md) and [Manual Memory](13-manual-memory.md).
 
 Indexing a `List(T)` with `[i]` works just like an array, but that is not built-in syntax either: the list implements the `operator_get` and `operator_set` methods, and the compiler resolves `lista[i]` to those at compile time. See [Operator Overloading](27-operator-overloading.md).
 

@@ -49,16 +49,29 @@ ptrA.value = 50  // changes the value in the 'drawer' it points at
 
 After `ptrA = ptrB`, the two pointers are aliases of the same storage. The subsequent `ptrA.value = 50` therefore writes `50` into whatever cell both now reference. Reading the bare pointer name compares or copies addresses; reaching for `.value` always touches the underlying data.
 
+## The null pointer
+
+`null` is a valid value for any `Ptr(T)` — it is the "points at nothing" address. Use it as an initial or sentinel value, and compare against it directly with `==` / `!=`:
+
+```dlang
+var next: Ptr(Node) = null       // no cast needed
+if (next == null) {
+  println("end of list")
+}
+```
+
+Because `null` and `== null` work on pointers directly, you never need to write `cast(Ptr(T), 0)` for a null pointer or `cast(long, p) == cast(long, 0)` for a null check — write `null` and `p == null`.
+
 ## Pointers to structs
 
 `.value` chains naturally into field access, so a pointer to a struct lets you mutate fields in place:
 
 ```dlang
-val pessoaPtr: Ptr(Pessoa) = _alloc.alloc(Pessoa)
+val pessoaPtr: Ptr(Pessoa) = New(Pessoa)
 pessoaPtr.value.nome = "Gabriel" // change a field inside the struct
 ```
 
-Here `_alloc.alloc(Pessoa)` returns a `Ptr(Pessoa)` pointing at freshly reserved memory. See [Manual Memory Management](13-manual-memory.md) for how that allocation is paired with `defer _alloc.free(...)`.
+Here `New(Pessoa)` returns a `Ptr(Pessoa)` pointing at freshly reserved memory. See [Manual Memory Management](13-manual-memory.md) for how allocation and freeing work.
 
 ## Function pointers are different
 

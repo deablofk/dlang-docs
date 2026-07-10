@@ -9,9 +9,9 @@ header to switch to Português.)_
 - **Data-oriented, no OOP** — no classes, no inheritance, no vtables. Behavior is
   *syntax sugar over data*; polymorphism is achieved with structural interfaces
   (fat pointers).
-- **Explicit over implicit** — explicit allocators (`_alloc`, `_gcAlloc`), explicit
-  `.value` pointer dereference, explicit concurrency executor (`_exec`), no implicit
-  numeric conversions, no hidden heap allocation.
+- **Explicit over implicit** — an ambient, swappable allocator context
+  (`New(T)`, `pushAllocator`), explicit `.value` pointer dereference, no implicit
+  numeric conversions (though bare integer literals adapt), no hidden heap allocation.
 - **Zero-cost / static dispatch** — generics by monomorphization, interfaces as fat
   pointers, operator overloading resolved entirely at compile time.
 - **Bindings:** `::` binds a compile-time constant (function, type); `val` is an

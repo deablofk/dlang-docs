@@ -1,6 +1,6 @@
 # Closures e Funções Anônimas
 
-Uma função anônima é um literal de função sem nome: exatamente a mesma sintaxe de uma função nomeada, menos a parte `nome ::`. Uma *closure* é um literal desses que captura variáveis do escopo ao redor. A promessa central de DLang aqui é que o custo de uma closure é sempre visível: uma closure que não sobrevive ao seu escopo é gratuita, e uma que sobrevive exige um alocador explícito.
+Uma função anônima é um literal de função sem nome: exatamente a mesma sintaxe de uma função nomeada, menos a parte `nome ::`. Uma *closure* é um literal desses que captura variáveis do escopo ao redor. A promessa central de DLang aqui é que o custo de uma closure é sempre visível: uma closure que não sobrevive ao seu escopo é gratuita, e uma que sobrevive aloca seu ambiente capturado a partir do alocador atual.
 
 ## Três formas de literal
 
@@ -54,7 +54,7 @@ Uma closure *escapa* quando é retornada ou guardada em algum lugar que sobreviv
 
 ```dlang
 // closure escapante: retornada/guardada além do escopo.
-// precisa de um alocador explícito, como qualquer dado que sobrevive à função.
+// seu ambiente capturado é alocado na heap a partir do alocador atual.
 fazContador :: () -> Ptr((() -> int)) {
   var n = 0
   // captura 'n' e sobrevive à função -> alocação explícita e clara
@@ -68,7 +68,7 @@ O valor retornado é um `Ptr((...) -> ...)`, então é invocado através de `.va
 
 Um literal de função é uma função nomeada sem o nome — uma regra, zero sintaxe nova. A forma curta `{ _ * 2 }` reaproveita o mesmo placeholder do laço `for`, então uma lambda de um argumento fica enxuta; dois ou mais argumentos, ou tipos explícitos, voltam à forma completa.
 
-O coração do design é a distinção de escape. Uma closure não-escapante é gratuita (pilha); uma escapante leva um alocador explícito. A linguagem nunca aloca heap *escondido* atrás de uma closure — o pecado de muitas linguagens com coletor de lixo. Você vê o `_alloc` e sabe o custo. Se preferir entregar o ciclo de vida ao coletor de lixo, `_gcAlloc` também funciona aqui.
+O coração do design é a distinção de escape. Uma closure não-escapante é gratuita (pilha); uma escapante aloca na heap seu ambiente capturado, tirando essa memória do alocador atual (o mesmo contexto ambiente que toda outra alocação usa — veja [Alocação Dinâmica](18-dynamic-allocation.md)). O custo é real mas previsível, e você pode redirecioná-lo instalando um alocador diferente.
 
 ## Relacionados
 

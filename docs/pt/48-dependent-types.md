@@ -46,11 +46,11 @@ lerN :: () -> int = ...        // valor só conhecido em execução
 // var v: Vetor(float, lerN())  // ERRO: N precisa ser compile-time
 ```
 
-Para um tamanho que é genuinamente dinâmico, você não recorre ao sistema de tipos — usa um contêiner na heap com um alocador explícito:
+Para um tamanho que é genuinamente dinâmico, você não recorre ao sistema de tipos — usa um contêiner na heap (`List(T)`):
 
 ```dlang
-// para tamanho dinâmico use List(T) (heap, alocador explícito), não o tipo
-var v: List(float) = List(float).init(_alloc)
+// para tamanho dinâmico use List(T) (heap, alocador ambiente), não o tipo
+var v: List(float) = List(float).empty()
 ```
 
 Isso mantém uma linha dura e legível: dimensões no *tipo* são sempre fatos de compile-time; qualquer coisa que varie em runtime vive num *valor* como `List`.

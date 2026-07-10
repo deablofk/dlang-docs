@@ -50,7 +50,7 @@ You can call with inference, letting the compiler recover `T` from the arguments
 ```dlang
 val m = max(10, 20)        // T = int, inferred from the arguments
 val x = max(int)(10, 20)   // instantiate max(int), then call
-val l = List(int).init(_alloc)
+val l = List(int).empty()
 ```
 
 ## Compile-time value parameters

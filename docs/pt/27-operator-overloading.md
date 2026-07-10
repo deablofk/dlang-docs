@@ -45,7 +45,7 @@ List.operator_set :: (indice: int, valor: T) {
 Com isso definido, os colchetes leem e escrevem através dos métodos:
 
 ```dlang
-var nomes: List(string) = List(string).init(_alloc)
+var nomes: List(string) = List(string).empty()
 nomes[0] = "Gabriel"             // reescreve para nomes.operator_set(0, "Gabriel")
 val primeiro = nomes[0]          // reescreve para nomes.operator_get(0)
 ```

@@ -1,6 +1,6 @@
 # Maps and Dictionaries
 
-A map associates keys with values. DLang offers two complementary tools: a **fixed map literal** baked directly into the language, and a **dynamic `Map(K, V)`** that lives in the standard library. The split mirrors the philosophy used for arrays and lists — the compiler knows about the small, statically-sized form, while growth-over-time is a library type you opt into with an explicit allocator.
+A map associates keys with values. DLang offers two complementary tools: a **fixed map literal** baked directly into the language, and a **dynamic `Map(K, V)`** that lives in the standard library. The split mirrors the philosophy used for arrays and lists — the compiler knows about the small, statically-sized form, while growth-over-time is a library type that draws from the current (ambient) allocator.
 
 ## Fixed maps
 
@@ -24,7 +24,7 @@ keyValueMap["maça"] = 20
 val preco: int = keyValueMap["banana"]
 ```
 
-Since the capacity is fixed, you cannot add brand-new keys beyond `N` — the bracket form updates existing entries. When you need to grow, reach for the dynamic `Map`.
+Since the capacity is fixed, you cannot add brand-new keys beyond `N` — the bracket form updates existing entries. Lookup is a linear scan that compares keys with `==` (so `string` keys, enum keys, and integer keys all work); if the key is not present, reading yields a zero value. When you need to grow, reach for the dynamic `Map`.
 
 ### Iteration
 
@@ -40,21 +40,22 @@ This is the same destructuring machinery used everywhere else in the language �
 
 ## Dynamic maps
 
-When the set of keys is not known ahead of time, use `Map(K, V)`. It is a normal generic struct from the standard library — **not** a compiler builtin — and therefore follows the same explicit-allocator discipline as `List`. You construct it by handing it an allocator, and it grows on demand.
+When the set of keys is not known ahead of time, use `Map(K, V)`. It is a normal generic struct from the standard library — **not** a compiler builtin — built from the same generics and operator overloading every other container uses.
 
 ```dlang
-var mapa: Map(string, int) = Map(string, int).init(_alloc)
+var mapa: Map(string, int) = Map(string, int).empty()
 
-mapa.put("banana", 30)
+mapa.set("banana", 30)              // insert or overwrite
+val preco: int = mapa.get("banana") // read back
 ```
 
-`put` inserts a new key or overwrites an existing one, growing the underlying storage when the key is absent. Because all of this is library code, there is no hidden behavior: the allocator you pass is exactly where the memory comes from. Use `_alloc` for the default manual allocator, or `_gcAlloc` if you want the garbage collector to manage its lifetime.
+`.set(k, v)` inserts a new key or overwrites an existing one, growing the underlying storage when the key is absent; `.get(k)` reads it back (lookup is a linear scan keyed by `==`). Other methods include `.contains(k)`, `.remove(k)`, `.size()`, `.keyAt(i)` / `.valueAt(i)`, and `operator_get` / `operator_set` so `mapa["k"]` and `mapa["k"] = v` work too.
 
-Like any allocator-backed type, a dynamic map should be released when you are done with it (typically via `defer mapa.deinit()`), in keeping with the patterns shown in [Dynamic allocation](18-dynamic-allocation.md).
+The memory a `Map` grows into comes from the **current allocator** — DLang's ambient, swappable memory context (see [Dynamic allocation](18-dynamic-allocation.md)), not an allocator you thread in by hand.
 
 ## Design rationale
 
-Splitting maps into a fixed literal plus a library type keeps the language small while honoring **explicit > implicit**. The fixed form is genuinely zero-cost: its size is in the type, so the compiler can lay it out inline and even fold lookups at compile time. The dynamic form never allocates behind your back — you can always point to the `_alloc` (or `_gcAlloc`) that owns its memory. And because `Map(K, V)` is an ordinary generic struct, it requires no special compiler magic: it is built from the same generics, operator overloading (`operator_get` / `operator_set`), and allocator conventions every other container uses.
+Splitting maps into a fixed literal plus a library type keeps the language small. The fixed form is genuinely zero-cost: its size is in the type, so the compiler lays it out inline (on the stack, in a struct field, or in a global) with no heap allocation. The dynamic form draws its storage from the current allocator, so its memory model is the same swappable context every other container uses — and because `Map(K, V)` is an ordinary generic struct, it needs no special compiler magic: it is built from the same generics and operator overloading (`operator_get` / `operator_set`) as everything else.
 
 ## Related
 

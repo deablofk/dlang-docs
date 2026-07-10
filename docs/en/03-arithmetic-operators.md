@@ -29,6 +29,33 @@ val i: int = --e   // e decreases first, then i gets the new value
 
 Because these operators mutate the operand, they only make sense on a mutable binding (`var`). Applying them to an immutable `val` is a compile error — see [Variables and Scope](04-variables-and-scope.md) for the mutability rules.
 
+## Compound assignment
+
+For the common "update a variable using its own value" pattern, DLang provides the conventional compound-assignment operators. `x += e` is exactly shorthand for `x = x + e`, and the same holds for every arithmetic and bitwise operator:
+
+```dlang
+var total: int = 0
+total += 10   // total = total + 10
+total -= 3    // total = total - 3
+total *= 2    // total = total * 2
+total /= 4    // total = total / 4
+total %= 5    // total = total % 5
+
+var flags: int = 0
+flags |= 4    // set a bit
+flags &= 6    // mask bits
+flags ^= 2    // toggle a bit
+```
+
+They work on any assignable target — a plain `var`, a struct field, a pointer's `.value`, an index:
+
+```dlang
+contador.value.n += 1   // through a pointer
+placar[i] += pontos      // through an index
+```
+
+The full set is `+= -= *= /= %= &= |= ^=`. (The shift-assign forms `<<=` / `>>=` are not yet available; write `x = x << n` for those.) Like `++`/`--`, compound assignment requires a mutable target.
+
 ## Bitwise operators
 
 For working at the bit level, DLang offers the conventional C set. These operate only on the integer types (`byte`, `short`, `int`, `long`) — never on `float`, `double`, or `boolean` — and, like arithmetic, both operands must already be the same integer type:
@@ -57,7 +84,25 @@ val perms: int = 0o755         // 493
 val big:   long = 0x1_0000_0000 // needs `long` — overflows `int`
 ```
 
-A literal is still typed as `int` by default, so a value that does not fit in 32 bits must be annotated (or `cast`) to `long`.
+A literal is typed as `int` by default, but a bare integer literal has no *fixed* width until context gives it one — so it **adapts** to the type it is used with. A literal that does not fit in 32 bits must be annotated (or `cast`) to `long`:
+
+```dlang
+val big: long = 0x1_0000_0000   // the literal adopts `long` from the annotation
+```
+
+### Literal adaptation in arithmetic
+
+The same adaptation applies inside a binary operation: a bare integer literal takes on the *other* operand's integer type. This means the common cases just work, without a cast on the literal:
+
+```dlang
+var n: long = 5
+val m: long = n + 1       // the `1` becomes `long`; no cast needed
+
+var b: byte = 12
+val masked: byte = b & 0xF   // `0xF` becomes `byte`
+```
+
+Only *literals* adapt. Two *typed values* of different widths still require an explicit `cast` — `intVar + longVar` is an error, because neither side is a literal the compiler can retype. This preserves the "no hidden coercion" rule (see [Static Typing](29-static-typing.md)) while removing the noise of casting constants.
 
 ## Operators are expressions
 

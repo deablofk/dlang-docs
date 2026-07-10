@@ -1,6 +1,6 @@
 # Arrays e Listas Nativas
 
-DLang distingue dois tipos de coleção sequencial, e a distinção é deliberada e visível. Um **array de tamanho fixo** é um tipo de nível de compilador cujo comprimento faz parte do seu tipo e é conhecido em tempo de compilação. Uma **lista dinâmica** é um tipo comum de biblioteca padrão, `List(T)`, que cresce em runtime usando um alocador explícito. Nenhum dos dois esconde de você uma alocação na heap.
+DLang distingue dois tipos de coleção sequencial, e a distinção é deliberada e visível. Um **array de tamanho fixo** é um tipo de nível de compilador cujo comprimento faz parte do seu tipo e é conhecido em tempo de compilação. Uma **lista dinâmica** é um tipo comum de biblioteca padrão, `List(T)`, que cresce em runtime tirando sua memória do alocador atual. Nenhum dos dois esconde de você uma alocação na heap.
 
 ## Arrays de tamanho fixo
 
@@ -25,11 +25,11 @@ val nomes: []string = ["gabriel", "bruno"]   // implicitamente [2]string
 Quando o número de elementos só é conhecido em runtime, você recorre a `List(T)`. Crucialmente, `List(T)` **não** é mágica do compilador — é uma struct genérica normal fornecida pela biblioteca padrão, o mesmo tipo de tipo que você poderia escrever. O que a torna dinâmica é que ela possui um buffer que cresce, e crescer esse buffer significa alocar memória. DLang nunca aloca implicitamente, então você entrega um alocador à lista ao criá-la:
 
 ```dlang
-var lista: List(int) = List(int).init(_alloc)   // _alloc = alocador padrão
+var lista: List(int) = List(int).empty()   // cresce do alocador atual (contexto)
 lista.add(10)
 ```
 
-`List(int).init(_alloc)` constrói uma lista vazia respaldada pelo alocador padrão `_alloc`. Você poderia passar qualquer alocador aqui — esse é justamente o ponto de tornar o alocador explícito. `lista.add(10)` anexa um elemento, crescendo o buffer de respaldo se necessário. Como a lista possui memória na heap, você é responsável por liberá-la (tipicamente com `defer lista.deinit()`); os detalhes de alocação e limpeza são cobertos em [Alocação Dinâmica](18-dynamic-allocation.md) e [Gerenciamento de Memória Manual](13-manual-memory.md).
+`List(int).empty()` constrói uma lista vazia. Seu armazenamento de base cresce a partir do **alocador atual** — o contexto de memória ambiente e trocável de DLang — então você nunca passa um alocador à mão; instalar um alocador diferente redireciona a memória da lista também. `lista.add(10)` anexa um elemento, crescendo o buffer de respaldo se necessário. O modelo de alocador é coberto em [Alocação Dinâmica](18-dynamic-allocation.md) e [Gerenciamento de Memória Manual](13-manual-memory.md).
 
 Indexar uma `List(T)` com `[i]` funciona como num array, mas isso também não é sintaxe embutida: a lista implementa os métodos `operator_get` e `operator_set`, e o compilador resolve `lista[i]` para eles em tempo de compilação. Veja [Sobrecarga de Operadores](27-operator-overloading.md).
 

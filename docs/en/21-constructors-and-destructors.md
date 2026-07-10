@@ -18,7 +18,7 @@ Jogador.criar :: (nome: string) -> Jogador {
   return Jogador{
     nome: nome,
     vida: 100,
-    inventario: List(string).init(_alloc)
+    inventario: List(string).empty()
   }
 }
 ```
@@ -32,7 +32,7 @@ Some values own resources that must be released: a dynamic list holds heap memor
 ```dlang
 // Destructor: releases everything this value owns.
 Jogador.destruir :: () {
-  _.inventario.deinit()                 // frees the inner dynamic list
+  _alloc.free(cast(Ptr(byte), _.buffer))   // release owned heap memory
   println("${_.nome} foi limpo da memória")
 }
 ```
@@ -57,7 +57,7 @@ jogar :: () {
 }
 ```
 
-This is the same pattern you already use for raw memory (`defer _alloc.free(p)`) and dynamic collections (`defer itens.deinit()`), described in [Dynamic Allocation](18-dynamic-allocation.md) and [Manual Memory](13-manual-memory.md). The factory/`defer destruir()` pair is simply that pattern applied to a struct that owns resources.
+This is the same pattern you already use for raw memory (`defer _alloc.free(p)`), described in [Dynamic Allocation](18-dynamic-allocation.md) and [Manual Memory](13-manual-memory.md). The factory/`defer destruir()` pair is simply that pattern applied to a struct that owns resources.
 
 ## Design rationale
 

@@ -45,7 +45,7 @@ List.operator_set :: (indice: int, valor: T) {
 With those defined, brackets read and write through the methods:
 
 ```dlang
-var nomes: List(string) = List(string).init(_alloc)
+var nomes: List(string) = List(string).empty()
 nomes[0] = "Gabriel"             // rewrites to nomes.operator_set(0, "Gabriel")
 val primeiro = nomes[0]          // rewrites to nomes.operator_get(0)
 ```

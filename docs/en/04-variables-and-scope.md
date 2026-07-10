@@ -25,6 +25,18 @@ A `const val` is a stronger promise: the value is a true constant known at **com
 
 It is worth contrasting these runtime bindings with the `::` form you will see throughout the documentation. `::` binds **compile-time constants** — functions, types, namespaces — names that are fully resolved by the compiler. `val` and `var`, by contrast, name **runtime** data. So `somar :: (...)` defines a function (a compile-time entity), while `val resultado = somar(2, 3)` binds a runtime value. Keeping these in separate syntax makes it immediately clear, when reading code, whether a name refers to something fixed at build time or something that lives during execution.
 
+## Top-level bindings
+
+All three forms may also appear at **file scope**, outside any function. A top-level `const val` (or plain `val`) is a compile-time constant with no runtime storage — each use inlines its value. A top-level `var` is a genuine **global variable**: it has real storage that persists for the whole program and is shared across functions.
+
+```dlang
+var requestCount: int = 0        // a global, shared mutable counter
+
+bump :: () { requestCount += 1 }
+```
+
+A global `var` is zero-initialized by default (a constant scalar initializer like `= 5` is honored). A non-constant initializer is **not** run at program start, so if a global needs computed setup, initialize it lazily on first use rather than in the declaration.
+
 ## Scope
 
 Bindings are lexically scoped to the block in which they are declared, delimited by mandatory braces. A name introduced inside a block is visible from its declaration to the end of that block and not beyond. Because the language is expression-oriented, blocks themselves can produce values (see [Conditionals](05-conditionals.md)), but the visibility rule is the same classic lexical one: inner scopes can see outer names, outer scopes cannot see inner names.

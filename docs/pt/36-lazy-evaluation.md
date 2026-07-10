@@ -38,7 +38,7 @@ Um método **eager** — o comportamento atual de `List` — roda o `for` na hor
 ```dlang
 // EAGER (comportamento atual de List): o 'for' roda na hora e materializa
 List(T).map(R) :: (f: (T) -> R) -> List(R) {
-  var saida = List(R).init(_.alloc)
+  var saida = List(R).empty()
   for (item : _) saida.add(f(item))   // <- o trabalho acontece AQUI, na hora
   return saida
 }
