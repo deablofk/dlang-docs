@@ -40,15 +40,45 @@ configurar("localhost", tls = true)     // skips porta, names tls
 configurar("localhost", 9090)           // porta=9090 positionally
 ```
 
+## Parameter conventions — what the callee may DO with the argument
+
+Independent of *how* an argument is matched (positionally or by name), an optional keyword before the parameter name declares what the function does with it. This is DLang's entire reference story — there is no `&` at the call site, and the convention is enforced by the compiler ([Memory Safety](14a-memory-safety.md)):
+
+| Convention | Callee's access | Ownership |
+|---|---|---|
+| `borrow` (default, unwritten) | read-only | caller keeps it |
+| `inout` | exclusive read-write, **written back** | caller keeps it and sees the mutation |
+| `sink` | full | transfers to the callee (the argument is consumed) |
+| `set` | write-first: starts **uninitialized**, must be assigned on every path | caller keeps the initialized result |
+
+```dlang
+peek    :: (p: Pessoa) -> string = p.nome            // borrow: read only
+rename  :: (inout p: Pessoa, novo: string) { p.nome = novo }
+adopt   :: (sink xs: List(int)) -> int = xs.size()   // consumes the list
+split   :: (s: string, set head: string, set tail: string) { ... }  // out-slots
+
+var pessoa: Pessoa = Pessoa { nome: "Gabriel", idade: 25 }
+rename(pessoa, "Bruno")      // pessoa.nome is "Bruno" after the call
+```
+
+The rules, briefly (each is a compile error, not a runtime surprise):
+
+- A plain parameter is **immutable** — assigning to it or through it is `E_IMMUTABLE`. Copyable values arrive as by-value copies; `nocopy` values arrive as read-only borrows.
+- An `inout` argument must be a mutable lvalue rooted at a `var`, and two `inout` arguments may not alias the same storage (`E_EXCLUSIVITY` — the Law of Exclusivity).
+- A `sink` argument is a **move**: for a `nocopy` type the caller's binding is consumed, and using it afterward is `E_USE_AFTER_MOVE`.
+- A `set` slot must be assigned on every path through the callee (`E_SET_UNASSIGNED`) and may not be read before its first assignment (`E_SET_BEFORE_ASSIGN`). It replaces the C habit of passing a pointer for the callee to fill.
+- No convention lets a reference escape: returning or storing a borrowed parameter is `E_REF_ESCAPES`.
+
 ## Design rationale
 
-Named arguments plus defaults deliberately replace function overloading. Instead of declaring three versions of `configurar` to cover the optional cases, you declare one function and let the call site express intent. This keeps the symbol table small and resolution trivial — there is exactly one `configurar`, so there is nothing to disambiguate. It also fits the **explicit > implicit** philosophy: a named argument states exactly which parameter it fills, leaving no doubt at the call site. As with everything else in DLang, no hidden conversions happen to the arguments; values are passed as their declared types, and a mismatch is a compile error rather than a silent coercion.
+Named arguments plus defaults deliberately replace function overloading. Instead of declaring three versions of `configurar` to cover the optional cases, you declare one function and let the call site express intent. This keeps the symbol table small and resolution trivial — there is exactly one `configurar`, so there is nothing to disambiguate. It also fits the **explicit > implicit** philosophy: a named argument states exactly which parameter it fills, leaving no doubt at the call site. As with everything else in DLang, no hidden conversions happen to the arguments; values are passed as their declared types, and a mismatch is a compile error rather than a silent coercion. The conventions complete the picture by making the *effect* on each argument part of the signature: a call site never needs `&` or a comment to tell you which arguments may change — the function's declaration already said so, and the compiler holds it to that.
 
 ## Related
 
 - [Functions and procedures](09-functions.md)
 - [Multiple return values](11-multiple-returns.md)
 - [Pointers and references](12-pointers-and-references.md)
+- [Memory Safety](14a-memory-safety.md)
 - [Static typing](29-static-typing.md)
 
 [← Index](README.md)

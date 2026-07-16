@@ -1,21 +1,21 @@
 # Construtores e Destrutores
 
-DLang não tem construtores mágicos nem destrutores mágicos, porque não tem [classes](20-classes-and-objects.md). Não existe um método que roda automaticamente quando um valor nasce, nem um método que roda automaticamente quando ele morre. Em vez disso, a construção é uma **função fábrica** comum que você chama pelo nome, e a destruição é um método comum que você agenda com `defer`. Ambos são código ordinário que você pode ler, e nenhum dos dois esconde fluxo de controle.
+DLang não tem construtores mágicos — construção é uma **função fábrica** comum que você chama pelo nome, sem fluxo de controle escondido. A destruição, por outro lado, *é* automática, mas de um jeito muito específico e visível: um tipo que possui algo declara um método **`deinit`**, e o compilador o chama **exatamente uma vez, no último uso do valor**. Você nunca agenda a limpeza e não tem como esquecê-la — e como o ponto de liberação é o *último uso*, não uma fronteira de escopo escondida, dá para lê-lo direto no código.
 
 ## Construção: funções fábrica
 
-Um literal de struct já lhe dá um valor com todos os campos preenchidos. Quando você precisa encapsular o trabalho de construir uma instância válida — escolher padrões, inicializar uma lista dinâmica interna, falar com um alocador — você escreve uma função fábrica. A convenção é `Tipo.criar`, que retorna um valor completamente formado do tipo.
+Um literal de struct já dá um valor com todos os campos preenchidos. Quando você precisa encapsular o trabalho de construir uma instância válida — escolher padrões, inicializar uma lista interna — você escreve uma função fábrica. A convenção é `Tipo.new` (ou um nome mais específico), retornando um valor completo:
 
 ```dlang
-Jogador :: struct {
+Jogador :: nocopy struct {
   nome: string
   vida: int
   inventario: List(string)
 }
 
-// Fábrica: constrói e retorna um Jogador válido. Não há um `new` escondido.
-Jogador.criar :: (nome: string) -> Jogador {
-  return Jogador{
+// Fábrica: constrói e retorna um Jogador válido. Não há `new` escondido.
+Jogador.new :: (nome: string) -> Jogador {
+  return Jogador {
     nome: nome,
     vida: 100,
     inventario: List(string).empty()
@@ -23,52 +23,50 @@ Jogador.criar :: (nome: string) -> Jogador {
 }
 ```
 
-Como a fábrica é apenas uma função, você pode ter quantas quiser, com nomes diferentes (`Jogador.criarVazio`, `Jogador.criarDeArquivo`), cada uma retornando o mesmo tipo. Não há um "construtor" privilegiado nem resolução de sobrecarga para raciocinar — você chama aquele cujo nome diz o que ele faz.
+Como a fábrica é só uma função, você pode ter quantas quiser com nomes diferentes (`Jogador.newVazio`, `Jogador.fromArquivo`), cada uma retornando o mesmo tipo. Não há "o construtor" privilegiado nem resolução de overload para entender — você chama a que o nome diz o que faz. (O struct acima é `nocopy` porque contém uma `List` — um struct com um campo dono é ele próprio um dono, por contágio.)
 
-## Destruição: um método comum mais `defer`
+Para inicializar um slot do chamador *in place* — o padrão que C resolve com um ponteiro de saída — use um parâmetro `set` em vez de um retorno; veja [Passagem de Parâmetros](10-parameter-passing.md).
 
-Alguns valores possuem recursos que precisam ser liberados: uma lista dinâmica guarda memória da heap, um handle de arquivo guarda um recurso do SO. DLang expressa a limpeza como um método ordinário — por convenção `Tipo.destruir` — que libera o que quer que o valor possua. Nada o chama por você; **você o agenda explicitamente com `defer`**, que garante que ele rode quando o escopo envolvente terminar, não importa como (retorno normal, retorno antecipado ou erro).
+## Destruição: `deinit`, automático e ASAP
+
+Um tipo `nocopy` que possui um recurso declara `deinit`. O compilador insere a chamada no **último uso estático** do valor — assim que o valor está provadamente morto, em todo caminho de fluxo de controle, exatamente uma vez. Não há drop flags nem contabilidade de runtime; a análise é inteiramente estática ([Segurança de Memória](14a-memory-safety.md)).
 
 ```dlang
-// Destrutor: libera tudo o que este valor possui.
-Jogador.destruir :: () {
-  _alloc.free(cast(Ptr(byte), _.buffer))   // libera memória própria na heap
+Jogador.deinit :: () {
   println("${_.nome} foi limpo da memória")
+  // campos donos (como _.inventario) são derrubados automaticamente depois deste corpo
 }
-```
 
-## Juntando tudo
-
-O ciclo de vida idiomático emparelha a fábrica e o destrutor no topo do escopo, de modo que a limpeza fica visível bem ao lado da criação:
-
-```dlang
 jogar :: () {
-  // 1. Cria os dados.
-  var player = Jogador.criar("Gabriel")
-
-  // 2. Garante que o destrutor rode quando este escopo terminar.
-  defer player.destruir()
-
-  // 3. Usa os dados normalmente.
+  var player: Jogador = Jogador.new("Gabriel")
   player.inventario.add("espada longa")
-  println(player.nome)
-
-  // Quando `jogar` retorna, o player.destruir() adiado roda automaticamente.
+  println(player.nome)          // último uso — o deinit roda bem aqui
+  coisaCaraSemRelacaoComPlayer()
 }
 ```
 
-Esse é o mesmo padrão que você já usa para memória crua (`defer _alloc.free(p)`), descrito em [Alocação Dinâmica](18-dynamic-allocation.md) e [Gerenciamento de Memória Manual](13-manual-memory.md). O par fábrica/`defer destruir()` é simplesmente esse padrão aplicado a uma struct que possui recursos.
+Três propriedades valem internalizar:
 
-## Por quê
+- **Exatamente uma vez, em todo caminho.** `return` antecipado, `break`, fall-through — o compilador prova uma liberação por caminho. Liberação dupla não é uma classe de bug de runtime; uma forma que causaria uma é `E_USE_AFTER_MOVE` em tempo de compilação.
+- **ASAP, não fim de escopo.** O valor morre no seu último *uso*, então memória e recursos voltam o mais cedo que o programa permite.
+- **Posse compõe.** Um corpo de `deinit` libera o que o *próprio struct* segura cru (um fd, um recurso de C); **campos** donos (uma `List`, um `ByteBuf`, outro dono) são derrubados recursivamente sem você escrever nada.
 
-Construtores e destrutores automáticos são convenientes justamente por serem invisíveis — e invisibilidade é a inimiga de uma linguagem de sistema. Um construtor escondido pode alocar sem que você veja; um destrutor escondido pode rodar uma limpeza cara em uma fronteira de escopo na qual você não pensou. Ao tornar a construção uma função nomeada e a destruição um `defer` explícito, DLang mantém o custo e o momento do ciclo de vida de um valor à plena vista. Você sempre sabe o que roda, e sempre sabe exatamente quando. O mecanismo `defer` lhe dá a segurança da limpeza garantida — ele dispara em todo caminho de saída — sem abrir mão da visibilidade que destrutores escondidos no estilo RAII tiram de você.
+Se a posse é transferida — o valor é movido para um parâmetro `sink`, guardado num contêiner ou retornado — a responsabilidade pelo destrutor se move junto; o binding antigo está morto (`E_USE_AFTER_MOVE` se tocado) e nenhuma liberação dupla pode ocorrer.
+
+## E o `defer`?
+
+`defer statement` continua existindo e continua rodando em toda saída da função — mas não é mais como valores são destruídos. Use-o para efeitos que *não* são posse: logar uma conclusão, dar flush no fim de uma fase, teardown de teste. Se você se pegar escrevendo `defer x.release()`, o tipo deveria ser um dono `nocopy` com `deinit` — aí o compilador faz isso, corretamente, em todo caminho.
+
+## Racional de design
+
+A velha objeção a destrutores automáticos — "código invisível rodando em horas invisíveis" — é respondida de um jeito diferente do C++. A construção continua uma função nomeada: sem alocação escondida, sem conversões implícitas, você vê cada custo. A destruição é automática mas *determinística e legível*: `deinit` é código comum que você escreveu, e roda no último uso do valor, um ponto que se acha lendo a função. O que a DLang remove não é visibilidade, é o *agendamento manual* — a única parte que humanos erram com consistência (o free esquecido, o free duplo num return antecipado). O compilador é simplesmente melhor em posicionar a chamada do que um `defer` que você tinha que lembrar de escrever.
 
 ## Relacionados
 
-- [Estruturas de Dados Personalizadas](17-structs.md)
-- [Classes e Objetos](20-classes-and-objects.md)
-- [Gerenciamento de Memória Manual](13-manual-memory.md)
+- [Structs](17-structs.md)
+- [Segurança de Memória](14a-memory-safety.md)
+- [Memória Manual — o piso Builtin](13-manual-memory.md)
 - [Alocação Dinâmica](18-dynamic-allocation.md)
-- [Arrays e Listas](07-arrays-and-lists.md)
+- [Passagem de Parâmetros](10-parameter-passing.md)
 
 [← Índice](README.md)

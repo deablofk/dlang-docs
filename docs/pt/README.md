@@ -9,10 +9,14 @@ de idioma no topo para mudar para English.)_
 - **Orientada a dados, sem OOP** — sem classes, sem herança, sem vtables.
   Comportamento é *açúcar sintático sobre dados*; polimorfismo é feito com
   interfaces estruturais (fat pointers).
-- **Explícito acima de implícito** — um contexto de alocador ambiente e trocável (`New(T)`, `pushAllocator`),
-  desreferência de ponteiro explícita via `.value`, sem conversões numéricas
+- **Explícito acima de implícito** — posse faz parte de toda assinatura (`borrow` /
+  `inout` / `sink` / `set`), alocação é visível (a fábrica de um valor dono), sem conversões numéricas
   implícitas (embora literais inteiros puros se adaptem), sem alocação de heap
   escondida.
+- **Seguro em memória por construção** — Mutable Value Semantics puro (o modelo
+  Hylo): donos `nocopy` afins com `deinit` ASAP automático, referências de segunda
+  classe, projeções, e nenhum ponteiro cru fora do piso Builtin auditado. Veja
+  [Segurança de Memória](14a-memory-safety.md).
 - **Custo zero / static dispatch** — generics por monomorfização, interfaces como
   fat pointers, sobrecarga de operadores resolvida inteiramente em compile-time.
 - **Ligações:** `::` liga uma constante de compile-time (função, tipo); `val` é uma

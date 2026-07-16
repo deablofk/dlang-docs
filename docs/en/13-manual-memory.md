@@ -1,59 +1,127 @@
-# Manual Memory Management
+# Manual Memory — the Builtin Floor
 
-DLang never allocates heap memory behind your back. When you want memory that outlives the current stack frame, you ask for it explicitly with `New(T)`, and you return it explicitly with `Undo(p)`. There is no garbage collector: lifetimes are yours to manage.
+Ordinary DLang code **does not manage memory**. Every allocation belongs to an owning value — a `string`, a `List`, a `Map`, a `ByteBuf`, a `Pool`, or an owner you write yourself — and the compiler destroys each owner at its static last use ([Memory Safety](14a-memory-safety.md)). There is no user-facing `malloc`, no arena block, and no `free` call to forget.
 
-What makes this ergonomic rather than tedious is that allocation is **ambient** — every allocation draws from the *current allocator*, a swappable value held in a per-program context. You don't thread an allocator through every function; you set it once (or accept the default) and everything downstream uses it. This is the model popularized by Jai, and it is covered in full in [Dynamic Allocation](18-dynamic-allocation.md).
+But *somebody* has to implement `List`, and somebody has to hold the raw resource a C library hands back. That somebody is the **Builtin floor**: the audited bottom layer where the raw vocabulary — `Ptr(T)`, `New`, `Undo`, `ref`, `_alloc.*` — is legal. This page is about writing floor code correctly. If you are not implementing an owning handle or binding C, you should never need it.
 
-## Allocating a typed value
+## The boundary law
 
-`New(T)` reserves exactly enough memory to hold a `T` and returns a `Ptr(T)` to it. Because it is a pointer to data, you reach the contents through `.value` (see [Pointers and References](12-pointers-and-references.md)).
+Raw memory operations are legal **only**:
+
+1. inside the methods of a **`nocopy` + `deinit` owning handle** — the struct whose whole job is to own an allocation or a foreign resource,
+2. in **extern C signatures** (bodiless declarations — see [C Interop](50-c-interop.md)),
+3. in `string`'s own implementation,
+4. in `yields` accessor bodies (the receiver-rooted `ref`),
+5. in the fixed runtime hooks.
+
+Anywhere else they are **`E_RAW_OUTSIDE_BUILTIN`**, on every build. There is no module allowlist — the standard library plays by the same rules, and the same handful of primitives underneath `List` are the ones you get for your own owners.
+
+## The GOLD RULE
+
+> **Every design states who owns each allocation and where it dies.**
+
+On the floor that rule is literal: each `New` must belong to exactly one owning handle, and that handle's `deinit` is where it dies. The compiler guarantees `deinit` runs exactly once, at the owner's last use — your job is only to make `deinit` release everything the handle owns.
+
+## Writing an owning handle
+
+The canonical floor citizen: a `nocopy` struct whose *methods* do the raw work and whose `deinit` releases the allocation. Nothing outside the methods ever sees a pointer.
 
 ```dlang
-val pessoaPtr: Ptr(Pessoa) = New(Pessoa)
-pessoaPtr.value.nome = "Gabriel"   // change a field inside the struct
-```
+// A growable stack of ints, implemented raw — this is exactly how List works.
+IntStack :: nocopy struct {
+  data: Ptr(int)
+  len : int
+  cap : int
+}
 
-The compiler knows the exact size of `Pessoa`, so it reserves precisely that many bytes — no more. For a block of `n` values, use `New(T, n)`, which returns a `Ptr(T)` to `n` contiguous slots you index with `p[i]`.
+IntStack.empty :: () -> IntStack = IntStack { data: null, len: 0, cap: 0 }
 
-Under the hood `New(T)` is the high-level spelling of the low-level primitive `_alloc.alloc(T)`; both allocate through the current allocator, so they are interchangeable. `New` reads better in ordinary code.
+IntStack.push :: (v: int) {
+  if (_.len == _.cap) {
+    var grown: int = _.cap * 2
+    if (grown == 0) {
+      grown = 4
+    }
+    val buf: Ptr(int) = _alloc.alloc(int, grown)   // legal: owning-handle method
+    for (i : 0..(_.len - 1)) {
+      buf[i] = _.data[i]
+    }
+    if (_.cap > 0) {
+      _alloc.free(_.data)
+    }
+    _.data = buf
+    _.cap = grown
+  }
+  _.data[_.len] = v
+  _.len = _.len + 1
+}
 
-## Freeing with `defer`
+IntStack.pop :: () -> int {
+  _.len = _.len - 1
+  return _.data[_.len]
+}
 
-Memory you allocate must be returned. The idiomatic pattern is to pair every allocation with a `defer Undo(p)`, placed immediately after it. (`Undo` is the high-level free; `_alloc.free(p)` is the low-level primitive underneath, both routing through the context.) `defer` schedules the free to run when the enclosing function exits, no matter which path it takes.
-
-```dlang
-criarInimigo :: () {
-  val inimigo: Ptr(Pessoa) = New(Pessoa)
-  defer Undo(inimigo)   // returned at function end
-
-  inimigo.value.nome = "Orc"
-  inimigo.value.idade = 150
+IntStack.deinit :: () {          // the compiler calls this at last use
+  if (_.cap > 0) {
+    _alloc.free(_.data)
+  }
 }
 ```
 
-Putting the `defer` right under the allocation makes leaks easy to audit: every allocation has its matching free visible one line below it, and `defer` guarantees it runs even on early returns or errors. Freeing is *explicit* — the language never frees for you, but it also never stops you from choosing exactly when a lifetime ends.
+Callers use `IntStack` as a plain safe value: it moves like any `nocopy` type, `E_USE_AFTER_MOVE` protects it, and its buffer is freed automatically. The `Ptr(int)` field is legal *because* the struct is a `nocopy`+`deinit` owner; the same field on a copyable struct is rejected wherever that struct is used.
 
-## Where the memory comes from
-
-`New` does not hard-wire libc `malloc`. It calls whatever allocator is currently installed in the context. By default that is the malloc-backed allocator, so the example above behaves like a classic `malloc`/`free`. But you can swap the allocator for a region of code — for example to a **debug allocator** that tracks every live block and reports double-frees and leaks while you develop:
+Inside the methods, the raw vocabulary is the classic one:
 
 ```dlang
-val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
-// ... allocations here are tracked ...
-debugReport(context().value)   // allocs / frees / leaked / errors
-popAllocator(prev)
+val h: Ptr(Pessoa) = New(Pessoa)    // heap-allocate one T   (= _alloc.alloc(T))
+Undo(h)                             // the paired free       (= _alloc.free(h))
+val buf: Ptr(int) = New(int, 8)     // N contiguous elements
+buf[3] = 42                         // unchecked pointer indexing
+val p: Ptr(int) = ref score         // address-of
+p.value = 10                        // dereference
 ```
 
-Every allocation between the push and pop — including implicit ones inside `string`, `List`, and `Map` — flows through the installed allocator. See [Dynamic Allocation](18-dynamic-allocation.md) for the full allocator API.
+There is no bounds checking and no lifetime checking in here — this is deliberately the audited layer where the guarantee is your code's responsibility, kept small enough to audit.
+
+## Wrapping a C resource
+
+A resource allocated by C — an `addrinfo` list, an SSL session, a file mapping — gets the same treatment: an owning handle whose methods do the raw calls and whose `deinit` releases it exactly once. `AddrInfoList` in `std/net/socket.dlang` is the model:
+
+```dlang
+getaddrinfo  :: (node: Ptr(byte), service: Ptr(byte), hints: Ptr(byte), res: Ptr(byte)) -> int
+freeaddrinfo :: (res: Ptr(byte)) -> void
+
+AddrInfoList :: nocopy struct { head: long }     // the raw list, carried as an opaque long
+AddrInfoList.deinit :: () {
+  if (_.head != cast(long, 0)) {
+    freeaddrinfo(cast(Ptr(byte), _.head))        // released exactly once, automatically
+  }
+}
+```
+
+Two floor idioms complete the FFI story:
+
+- **Scratch buffers** for C out-structs are a `ByteBuf` local: `ByteBuf.new(n)` + `.zeros(n)`, pass `.addr(0)` (an opaque `long`) to C, read fields back with `.i32at`/`.i64at`. The buffer dies at last use like any owner — `std/time` and `std/net` are the models.
+- **Addresses travel as `long`.** A `Ptr` expression may flow *one hop* into an extern C argument or an owning-handle/`string` method; anything beyond that crosses as an opaque `long` (`ByteBuf.addr(i)`, `cast(long, s.cstr())`). Pointers never spread through signatures.
+
+## What about `defer`?
+
+`defer` still exists as a general control-flow tool (run a statement at function exit), but it is **no longer how memory is released** — `deinit` at last use replaced the `defer Undo(p)` idiom, and it cannot be forgotten or doubled. Reach for `defer` for non-memory effects (logging, unlocking in code that predates an owner, test teardown).
+
+## The allocator is an implementation detail
+
+Owners' methods route allocations through the runtime's allocator (`std/mem/allocator.dlang`). There is **no supported way for ordinary code to swap it** — no ambient-allocator API surfaces above the floor. The two remaining artifacts (`debugAllocator` leak tracking, and the bulk arena the compiler wraps its own pipeline in during its self-migration) are tooling, compiled with `--raw-floor` — the flag that disables the boundary law for below-the-model code. Applications never need that flag.
 
 ## Design rationale
 
-Manual memory is the default because a systems language must offer predictable, zero-overhead control over the heap. Routing allocation through a visible, swappable allocator means there is no surprise allocation *and* no ceremony: you read `New(T)` and know a heap allocation happens, and you can redirect all of it — yours and the standard library's — by installing a different allocator, without rewriting a single call. Pairing allocation with `defer free` turns lifetime management into a local, visible pattern; and routing dereferences through `.value` keeps every memory access explicit.
+Manual memory did not disappear — it got a *place*. The floor keeps DLang a systems language: real pointers, exact layout, zero-cost FFI, allocation you can read. The boundary law keeps the floor from leaking upward: the unsafe vocabulary is confined to types whose single responsibility is ownership, small enough to audit, wrapped in an interface the checker can trust. Every safety property above (moves, borrows, projections, ASAP `deinit`) rests on these handles being correct — which is why the language makes "where raw code may live" a compiler-enforced law rather than a convention.
 
 ## Related
 
+- [Memory Safety](14a-memory-safety.md)
+- [Dynamic Allocation — owning values](18-dynamic-allocation.md)
 - [Pointers and References](12-pointers-and-references.md)
-- [Garbage Collection](14-garbage-collection.md)
-- [Dynamic Allocation](18-dynamic-allocation.md)
+- [C Interop](50-c-interop.md)
+- [Constructors and Destructors](21-constructors-and-destructors.md)
 
 [← Index](README.md)

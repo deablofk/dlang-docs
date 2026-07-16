@@ -1,6 +1,6 @@
 # Arrays e Listas Nativas
 
-DLang distingue dois tipos de coleção sequencial, e a distinção é deliberada e visível. Um **array de tamanho fixo** é um tipo de nível de compilador cujo comprimento faz parte do seu tipo e é conhecido em tempo de compilação. Uma **lista dinâmica** é um tipo comum de biblioteca padrão, `List(T)`, que cresce em runtime tirando sua memória do alocador atual. Nenhum dos dois esconde de você uma alocação na heap.
+DLang distingue dois tipos de coleção sequencial, e a distinção é deliberada e visível. Um **array de tamanho fixo** é um tipo de nível de compilador cujo comprimento faz parte do seu tipo e é conhecido em tempo de compilação. Uma **lista dinâmica** é um tipo comum de biblioteca padrão, `List(T)`, que cresce em runtime e é dona do próprio buffer. Nenhum dos dois esconde de você uma alocação na heap.
 
 ## Arrays de tamanho fixo
 
@@ -22,20 +22,51 @@ val nomes: []string = ["gabriel", "bruno"]   // implicitamente [2]string
 
 ## Listas dinâmicas
 
-Quando o número de elementos só é conhecido em runtime, você recorre a `List(T)`. Crucialmente, `List(T)` **não** é mágica do compilador — é uma struct genérica normal fornecida pela biblioteca padrão, o mesmo tipo de tipo que você poderia escrever. O que a torna dinâmica é que ela possui um buffer que cresce, e crescer esse buffer significa alocar memória. DLang nunca aloca implicitamente, então você entrega um alocador à lista ao criá-la:
+Quando o número de elementos só é conhecido em runtime, você recorre a `List(T)`. Crucialmente, `List(T)` **não** é mágica do compilador — é uma struct genérica normal fornecida pela biblioteca padrão, implementada no piso Builtin do mesmo jeito que você escreveria seu próprio dono ([Memória Manual](13-manual-memory.md)). O que a torna dinâmica é que ela **possui** um buffer que cresce — e posse é toda a história de como você a passa adiante (abaixo).
 
 ```dlang
-var lista: List(int) = List(int).empty()   // cresce do alocador atual (contexto)
+var lista: List(int) = List(int).empty()
 lista.add(10)
 ```
 
-`List(int).empty()` constrói uma lista vazia. Seu armazenamento de base cresce a partir do **alocador atual** — o contexto de memória ambiente e trocável de DLang — então você nunca passa um alocador à mão; instalar um alocador diferente redireciona a memória da lista também. `lista.add(10)` anexa um elemento, crescendo o buffer de respaldo se necessário. O modelo de alocador é coberto em [Alocação Dinâmica](18-dynamic-allocation.md) e [Gerenciamento de Memória Manual](13-manual-memory.md).
+`List(int).empty()` constrói uma lista vazia; `lista.add(10)` anexa, crescendo o buffer (dobrando) quando necessário. O buffer é liberado automaticamente no último uso da lista — o `deinit` dela roda exatamente uma vez, inserido pelo compilador ([Segurança de Memória](14a-memory-safety.md)).
+
+## Listas são donas: moves e cópias
+
+`List(T)` é um **dono `nocopy` (afim)**: tem exatamente um dono por vez, e atribuí-la ou retorná-la a **move** em vez de copiar. Usar o binding antigo depois de um move é erro de compilação — o verificador está protegendo você de dois donos liberando um buffer.
+
+```dlang
+var xs: List(int) = List(int).empty()
+xs.add(1)
+val ys: List(int) = xs        // MOVE — a posse transfere para ys
+val n: int = xs.size()        // ERRO[E_USE_AFTER_MOVE]
+val zs: List(int) = ys.copy() // cópia explícita elemento a elemento: agora dois donos
+```
+
+Passar uma lista para uma função segue as convenções de parâmetro ([Passagem de Parâmetros](10-parameter-passing.md)): um parâmetro simples a empresta só-leitura, `inout` deixa o chamado mutar com write-back, `sink` a consome.
+
+## Tocando elementos in place: projeções `.at(i)`
+
+`.get(i)` retorna uma *cópia* de um elemento e `xs[i] = v` substitui um — mas para mutar um elemento struct (ou seus donos aninhados) **in place**, projete-o com `.at(i)`:
+
+```dlang
+xs.at(i).hp = 99                    // auto-deref: escreve o campo dentro da lista
+xs.at(i).inventario.add("poção")    // donos aninhados também mutam in place
+
+inout e = xs.at(i)                  // segura a projeção por alguns statements
+e.hp = e.hp - 10
+e.escudo = 0
+// enquanto e vive, xs fica travada (usá-la é E_EXCLUSIVITY):
+// um crescimento poderia realocar o buffer e pender a projeção
+```
+
+Uma projeção não pode ser guardada, retornada nem vinculada com `val`/`var` (`E_REF_ESCAPES`); para ficar com um elemento, mova-o para fora com `xs.removeAt(i)`. A história completa de projeções — incluindo declarar acessores `yields` nos seus próprios tipos — está em [Segurança de Memória](14a-memory-safety.md).
 
 Indexar uma `List(T)` com `[i]` funciona como num array, mas isso também não é sintaxe embutida: a lista implementa os métodos `operator_get` e `operator_set`, e o compilador resolve `lista[i]` para eles em tempo de compilação. Veja [Sobrecarga de Operadores](27-operator-overloading.md).
 
 ## Por quê
 
-Separar arrays fixos de listas dinâmicas mantém o custo honesto. Um array `[N]T` é um layout primitivo, dimensionado em compile-time, sem sobrecarga, perfeito para dados cujo tamanho você conhece. Uma `List(T)` é um tipo de biblioteca que precisa alocar para crescer, e, ao forçar você a passar um alocador, a linguagem torna esse custo impossível de não perceber — não há alocação escondida por trás de um anexar de aparência inocente. Manter `List` na biblioteca padrão em vez de no compilador prova a afirmação central da linguagem: coleções ricas são apenas structs genéricas sobre um alocador e alguns métodos de operador, não built-ins privilegiados.
+Separar arrays fixos de listas dinâmicas mantém o custo honesto. Um array `[N]T` é um layout primitivo, dimensionado em compile-time, sem sobrecarga, perfeito para dados cujo tamanho você conhece. Uma `List(T)` é um tipo de biblioteca que precisa alocar para crescer, e a linguagem mantém esse custo visível sem fazer você gerenciá-lo: a criação é explícita, o crescimento é amortizado, a liberação é automática no último uso. Posse move-only é o modelo de custo honesto para um tipo dono de buffer — uma cópia profunda silenciosa esconderia trabalho O(n), e uma cópia rasa silenciosa seria uma fábrica de liberação dupla. Manter `List` na biblioteca padrão em vez de no compilador prova a afirmação central da linguagem: coleções ricas são apenas structs genéricas mais alguns métodos de operador, não built-ins privilegiados.
 
 ## Relacionados
 

@@ -76,22 +76,21 @@ val resultado = nums
 
 ## Returning a function
 
-A higher-order function can also *return* a function. Since the returned function captures local state and outlives its scope, this is an escaping closure and therefore heap-allocates its captured environment from the current allocator — faithful to the rule from [closures](34-closures.md):
+A higher-order function can also *return* a function. The returned closure captures what it needs **by value** and its environment moves to the heap, managed by the compiler like any other owned storage — no allocator, no pointer, no special call syntax ([Closures](34-closures.md)):
 
 ```dlang
-// HOF that returns a function: an escaping closure -> heap env from the current allocator
-// returns a function that remembers 'fator'
-multiplicador :: (fator: int) -> Ptr((int) -> int) {
-  return _alloc.closure({ _ * fator })   // captures 'fator' and outlives -> allocates
+// HOF that returns a function that remembers 'fator'
+multiplicador :: (fator: int) -> (int) -> int {
+  return (x: int) -> int = x * fator
 }
 
 val triplicar = multiplicador(3)
-triplicar.value(10)   // 30 (called via .value, it is a pointer to an allocated closure)
+triplicar(10)   // 30 — an ordinary function value, called directly
 ```
 
 ## Design rationale
 
-These functions stay in the standard library as plain generic methods, which means the language core has nothing special to know about them. By drawing from the current allocator they need no allocator parameter, and by having `reduce` allocate nothing they keep aggregation cheap.
+These functions stay in the standard library as plain generic methods, which means the language core has nothing special to know about them. Stages that build a new `List` return an owning value that dies at its last use like any other, and `reduce` allocates nothing, keeping aggregation cheap.
 
 There is one cost worth registering: a pipeline like `filtrar().map()` creates an **intermediate List at each stage** — each stage allocates. That is precisely the problem the parked lazy-iterator design would solve later by fusing the stages into a single loop. See [Lazy Evaluation](36-lazy-evaluation.md) for that future, parked optimization.
 

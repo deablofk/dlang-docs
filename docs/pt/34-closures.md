@@ -40,35 +40,35 @@ calcularDescontos :: () {
 
 ## Captura e memória: o caso não-escapante
 
-O caso comum é uma closure que não escapa: é criada, usada e descartada dentro do mesmo escopo. Isso não custa nada. Ela vive na pilha e captura suas variáveis *por referência*; nenhum alocador é envolvido.
+O caso comum é uma closure que não escapa: é criada, usada e descartada dentro do mesmo escopo. Isso não custa nada: o ambiente vive na pilha, e os valores capturados são snapshots dos bindings em escopo.
 
 ```dlang
 // closure não-escapante — usada e descartada dentro do escopo.
-// custo zero: vive na pilha, captura por referência, sem alocador.
+// custo zero: seu ambiente vive na pilha.
 lista.map({ _ * taxa })
 ```
 
 ## Captura e memória: o caso escapante
 
-Uma closure *escapa* quando é retornada ou guardada em algum lugar que sobrevive à função que a criou. Nesse ponto seu estado capturado não pode mais viver na pilha, então — exatamente como qualquer outro dado que precisa sobreviver a uma função — ela precisa de um alocador explícito. Você pede a alocação com `_alloc.closure({ ... })`, que devolve um `Ptr` para a closure, e a chama através de `.value`:
+Uma closure *escapa* quando é retornada ou guardada em algum lugar que sobrevive à função que a criou. Isso é uma coisa comum e suportada — a closure é um valor simples de tipo função, seu ambiente capturado vai para a heap, e o compilador gerencia esse armazenamento como qualquer outro valor com dono ([Segurança de Memória](14a-memory-safety.md)). Não há chamada de alocador, não há ponteiro e não há sintaxe especial de invocação:
 
 ```dlang
-// closure escapante: retornada/guardada além do escopo.
-// seu ambiente capturado é alocado na heap a partir do alocador atual.
-fazContador :: () -> Ptr((() -> int)) {
-  var n = 0
-  // captura 'n' e sobrevive à função -> alocação explícita e clara
-  return _alloc.closure({ n = n + 1; return n })
+// closure escapante: retornada além do escopo, chamada diretamente
+multiplicador :: (fator: int) -> (int) -> int {
+  return (x: int) -> int = x * fator     // captura 'fator' e sobrevive ao frame
 }
+
+val triplicar = multiplicador(3)
+val t = triplicar(10)                    // 30
 ```
 
-O valor retornado é um `Ptr((...) -> ...)`, então é invocado através de `.value`, igual a qualquer ponteiro alocado na heap.
+Consistente com Mutable Value Semantics, uma captura é uma **cópia por valor** — a closure tira um snapshot dos bindings que usa, e chamá-la nunca muta o ambiente externo (nem um compartilhado). Estado que precisa evoluir entre chamadas pertence a um valor que se vê: um struct `nocopy` com um método, não uma célula de closure escondida.
 
 ## Por quê
 
 Um literal de função é uma função nomeada sem o nome — uma regra, zero sintaxe nova. A forma curta `{ _ * 2 }` reaproveita o mesmo placeholder do laço `for`, então uma lambda de um argumento fica enxuta; dois ou mais argumentos, ou tipos explícitos, voltam à forma completa.
 
-O coração do design é a distinção de escape. Uma closure não-escapante é gratuita (pilha); uma escapante aloca na heap seu ambiente capturado, tirando essa memória do alocador atual (o mesmo contexto ambiente que toda outra alocação usa — veja [Alocação Dinâmica](18-dynamic-allocation.md)). O custo é real mas previsível, e você pode redirecioná-lo instalando um alocador diferente.
+O coração do design é a distinção de escape. Uma closure não-escapante é gratuita — seu ambiente vive na pilha. Uma escapante aloca na heap seu snapshot capturado, e o compilador possui esse armazenamento do mesmo jeito que possui o buffer de uma `string`. Captura por valor é a face em formato de closure do Mutable Value Semantics: não há ambiente com alias para pender ou disputar, então closures não precisam de nada da maquinaria de lifetime de que precisam em linguagens de semântica de referência.
 
 ## Relacionados
 

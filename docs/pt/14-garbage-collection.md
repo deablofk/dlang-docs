@@ -1,58 +1,56 @@
 # Coleta de Lixo Automática
 
-DLang **não tem coletor de lixo**, e isso é uma decisão de design deliberada, não uma funcionalidade faltando. Uma linguagem de sistemas deve tornar o custo da memória visível e previsível; um coletor em segundo plano que pode pausar seu programa em um momento imprevisível é o oposto disso. Memória em DLang é explícita: você aloca com `New(T)` e libera com `Undo(p)` (veja [Gerenciamento de Memória Manual](13-manual-memory.md)).
+DLang **não tem coletor de lixo**, e isso é uma decisão de design deliberada, não uma funcionalidade faltando. Uma linguagem de sistemas deve tornar o custo da memória visível e previsível; um coletor em segundo plano que pode pausar seu programa em um momento imprevisível é o oposto disso.
 
-O que DLang oferece *no lugar* da coleta automática é um jeito de tornar a memória manual ao mesmo tempo conveniente e verificável: o **alocador de contexto**.
+O que DLang tem *no lugar* é mais forte que um coletor: **posse estática**. Toda alocação pertence a exatamente um valor dono, e o compilador insere a liberação no último uso desse dono — em tempo de compilação, com zero maquinaria de runtime. Você ganha as duas coisas pelas quais um GC é valorizado — "eu não escrevo frees" e "não tem como errar" — sem pausas, sem headers nos objetos e sem runtime.
 
-## O alocador de contexto trocável
+## Como a memória realmente é liberada
 
-Toda alocação — `New(T)`, e cada alocação implícita dentro de `string`, `List` e `Map` — vem do *alocador atual*, um valor mantido em um contexto por-programa. O padrão é um alocador simples baseado em `malloc` da libc, mas você pode instalar outro para uma região de código com `pushAllocator` / `popAllocator`. É isso que substitui o "qual GC gerencia este objeto": você decide *como* a memória é gerenciada escolhendo o alocador, não esperando que um coletor limpe depois.
+Três mecanismos cobrem tudo, todos estáticos ([Segurança de Memória](14a-memory-safety.md) tem o modelo completo):
 
-```dlang
-val prev: Allocator = pushAllocator(meuAlocador)
-// ... toda alocação aqui usa meuAlocador ...
-popAllocator(prev)
-```
-
-Como a escolha vive no nível do alocador, a estratégia de memória de um subsistema inteiro pode mudar sem tocar em um único ponto de alocação.
-
-## Pegando vazamentos e liberações duplas
-
-A conveniência que um GC normalmente vende — "você não vai vazar" — DLang fornece como uma ferramenta de *verificação* opcional, e não como um imposto de tempo de execução. `debugAllocator` envolve qualquer alocador de base, registra cada bloco vivo e reporta liberações duplas ou inválidas na hora que acontecem; `debugReport` lista o que ainda está vivo (vazado) ao final.
+- **Destruição ASAP.** Um dono `nocopy` com `deinit` (todo contêiner: `List`, `Map`, `ByteBuf`, `Pool`, e seus próprios invólucros de recursos) é destruído **no seu último uso** — não no fim do escopo, não "eventualmente". Sem drop flags, sem contagem de referências; a análise prova o ponto de liberação por caminho de fluxo de controle.
 
 ```dlang
-val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
-
-val a: Ptr(int) = New(int)
-Undo(a)
-Undo(a)   // -> reportado: liberação inválida ou dupla
-
-debugReport(context().value)      // -> alocações / liberações / vazadas / erros
-popAllocator(prev)
+processar :: () {
+  var xs: List(int) = List(int).empty()
+  xs.add(1)
+  xs.add(2)
+  println("${xs.size()}")     // último uso de xs — o buffer é liberado bem aqui
+  trabalhoCaroQuePrecisaDeMemoria()
+}
 ```
 
-Você instala o alocador de depuração enquanto desenvolve para pegar erros, e simplesmente não o instala em uma build de release — então as verificações custam exatamente nada quando você publica. É a abordagem "copiloto, não imposto": a ferramenta ajuda a achar bugs sem impor um custo permanente de execução.
+- **Recuperação de strings.** Temporários de `string` — cadeias de concatenação, interpolação, argumentos de `println`, laços de acumulação `s = s + pedaço` — são liberados na hora por drops inseridos pelo compilador. O jeito natural de construir uma string também é o jeito correto para a memória.
 
-## Segurança de memória estática (em tempo de compilação, custo zero)
+- **Semântica de move.** Transferências de posse (`val ys = xs`, parâmetros `sink`, retornos) são moves, então nunca existe um segundo dono para "coletar" — e nunca um momento em que duas coisas poderiam liberar o mesmo buffer (`E_USE_AFTER_MOVE` guarda o binding de origem).
 
-O alocador de depuração pega as *suas* liberações duplas e vazamentos durante o desenvolvimento, mas não impede um ponteiro pendente, e é uma ferramenta de runtime. Além dele, DLang está ganhando um **modelo de segurança de memória estática**: use-after-free, liberação dupla e uso-após-move viram **erros de compilação** — rejeitados antes de o programa poder rodar, com **custo zero em runtime** em builds de release. `Ptr(T)` cru + `Undo` continua como uma válvula de escape explícita, mas os idiomas seguros tornam classes inteiras de bug *impossíveis de expressar* em vez de apenas detectáveis.
+O efeito líquido é recuperação determinística e imediata: a pressão de memória acompanha os dados vivos do programa, os pontos de liberação se leem no código-fonte, e um profiler vê as suas alocações, não as de um coletor.
 
-O modelo é um híbrido em camadas:
+## O que um GC dá que a DLang recusa
 
-- **Tipos `nocopy`** são *afins*: movidos, não copiados. Usar um depois de ele ter sido consumido — ou liberá-lo duas vezes — é erro de compilação, e seu destrutor (`deinit`) roda automaticamente, exatamente uma vez, no último uso.
-- **Convenções de parâmetro** (`borrow` / `sink` / `inout`) dizem se uma chamada consome um valor ou apenas o empresta, para você poder passar um recurso a um leitor sem abrir mão dele.
-- **Blocos `region { … }`** são arenas lexicais: aloque um grafo inteiro — mesmo cíclico — dentro de uma região e ele é liberado em bloco no fim, com uma verificação estática de que nenhum ponteiro escapa da região.
+Coletores por rastreamento existem para suportar **aliasing irrestrito** — qualquer objeto pode apontar para qualquer outro, e o runtime descobre a vivacidade. DLang deliberadamente não tem aliasing irrestrito: valores são valores, referências são de segunda classe, e identidade compartilhada passa por handles de `Pool(T)` ou índices ([Segurança de Memória](14a-memory-safety.md)). Uma vez que o aliasing é estruturado, a vivacidade é decidível em tempo de compilação e não sobra nada para o coletor fazer.
 
-Veja **[Segurança de Memória](14a-memory-safety.md)** para o modelo completo, com exemplos antes/depois.
+Ciclos — o argumento clássico de venda do GC — ilustram isso: entidades em um `Pool` podem se referenciar livremente através de valores `Handle` copiáveis, e o *pool* (um dono) morre no seu último uso. Nenhum detector de ciclos é necessário, porque handles são dados, não arestas que o runtime precise rastrear.
 
-## Por que sem coletor
+## Checagem de vazamento é ferramenta, não imposto
 
-A maioria das linguagens com coleta de lixo faz do GC o ar que você respira: toda alocação é oculta e gerenciada, e você não pode optar por sair. DLang inverte isso. A alocação é sempre explícita, e o alocador que você instala decide a estratégia. Isso mantém o caminho comum livre da sobrecarga e das pausas do coletor, enquanto o contexto trocável e o alocador de depuração recuperam a maior parte da ergonomia pela qual um GC é valorizado — redirecionar a memória de um subsistema e encontrar vazamentos — sem abrir mão da previsibilidade.
+A garantia do compilador é por dono: todo dono é destruído exatamente uma vez. A pergunta que sobra para um desenvolvedor às vezes — "o que está vivo agora, e quem alocou?" — é respondida por ferramentas no *piso Builtin* (um `debugAllocator` usado pelos harnesses de prova do próprio compilador), não por um runtime que você entrega. Binários de release não carregam nenhuma maquinaria de rastreamento.
+
+## Por que sem coletor — o resumo
+
+| | GC por rastreamento | DLang |
+|---|---|---|
+| quem libera | o runtime, eventualmente | o compilador, no último uso |
+| pausas | sim (ou maquinaria incremental complexa) | nenhuma |
+| custo por objeto | headers, barreiras, varredura | zero |
+| ciclos | rastreados em runtime | estruturados para fora (handles de `Pool`) |
+| vazamento = | memória inalcançável-mas-retida | descartado por dono em tempo de compilação |
+| quando a memória volta | imprevisível | determinístico, legível no código |
 
 ## Relacionados
 
-- [Gerenciamento de Memória Manual](13-manual-memory.md)
-- [Alocação Dinâmica](18-dynamic-allocation.md)
-- [Ponteiros e Referências](12-pointers-and-references.md)
+- [Segurança de Memória](14a-memory-safety.md) — o modelo de posse completo
+- [Memória Manual — o piso Builtin](13-manual-memory.md)
+- [Alocação Dinâmica — valores donos](18-dynamic-allocation.md)
 
 [← Índice](README.md)

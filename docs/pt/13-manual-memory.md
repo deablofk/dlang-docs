@@ -1,59 +1,127 @@
-# Gerenciamento de Memória Manual
+# Memória Manual — o Piso Builtin
 
-DLang nunca aloca memória na heap pelas suas costas. Quando você quer memória que sobreviva ao quadro de pilha atual, você a pede explicitamente com `New(T)`, e a devolve explicitamente com `Undo(p)`. Não há coletor de lixo: os tempos de vida são seus para gerenciar.
+Código DLang comum **não gerencia memória**. Toda alocação pertence a um valor dono — uma `string`, uma `List`, um `Map`, um `ByteBuf`, um `Pool`, ou um dono que você mesmo escreve — e o compilador destrói cada dono no seu último uso estático ([Segurança de Memória](14a-memory-safety.md)). Não há `malloc` visível ao usuário, não há bloco de arena e não há chamada de `free` para esquecer.
 
-O que torna isso ergonômico em vez de tedioso é que a alocação é **ambiente** — toda alocação vem do *alocador atual*, um valor trocável mantido em um contexto por-programa. Você não passa um alocador por cada função; você o define uma vez (ou aceita o padrão) e tudo abaixo o utiliza. Esse é o modelo popularizado por Jai, e é detalhado em [Alocação Dinâmica](18-dynamic-allocation.md).
+Mas *alguém* precisa implementar a `List`, e alguém precisa segurar o recurso cru que uma biblioteca C devolve. Esse alguém é o **piso Builtin**: a camada de baixo, auditada, onde o vocabulário cru — `Ptr(T)`, `New`, `Undo`, `ref`, `_alloc.*` — é legal. Esta página é sobre escrever código de piso corretamente. Se você não está implementando um handle dono nem fazendo binding de C, você nunca deve precisar dele.
 
-## Alocando um valor tipado
+## A lei de fronteira
 
-`New(T)` reserva exatamente a memória necessária para um `T` e retorna um `Ptr(T)` para ela. Como é um ponteiro para dados, você acessa o conteúdo através de `.value` (veja [Ponteiros e Referências](12-pointers-and-references.md)).
+Operações de memória crua são legais **apenas**:
+
+1. dentro dos métodos de um **handle dono `nocopy` + `deinit`** — o struct cujo único trabalho é possuir uma alocação ou um recurso estrangeiro,
+2. em **assinaturas extern C** (declarações sem corpo — veja [Interop com C](50-c-interop.md)),
+3. na implementação da própria `string`,
+4. em corpos de acessores `yields` (o `ref` enraizado no receiver),
+5. nos hooks fixos do runtime.
+
+Em qualquer outro lugar elas são **`E_RAW_OUTSIDE_BUILTIN`**, em todo build. Não há allowlist de módulos — a biblioteca padrão joga pelas mesmas regras, e o mesmo punhado de primitivas por baixo da `List` é o que você ganha para os seus próprios donos.
+
+## A REGRA DE OURO
+
+> **Todo design declara quem possui cada alocação e onde ela morre.**
+
+No piso essa regra é literal: cada `New` deve pertencer a exatamente um handle dono, e o `deinit` desse handle é onde ela morre. O compilador garante que o `deinit` roda exatamente uma vez, no último uso do dono — seu trabalho é só fazer o `deinit` liberar tudo que o handle possui.
+
+## Escrevendo um handle dono
+
+O cidadão canônico do piso: um struct `nocopy` cujos *métodos* fazem o trabalho cru e cujo `deinit` libera a alocação. Nada fora dos métodos vê um ponteiro.
 
 ```dlang
-val pessoaPtr: Ptr(Pessoa) = New(Pessoa)
-pessoaPtr.value.nome = "Gabriel"   // altera um campo dentro do struct
-```
+// Uma pilha de ints que cresce, implementada crua — exatamente como a List funciona.
+IntStack :: nocopy struct {
+  data: Ptr(int)
+  len : int
+  cap : int
+}
 
-O compilador conhece o tamanho exato de `Pessoa`, então reserva precisamente aquela quantidade de bytes — nem mais. Para um bloco de `n` valores, use `New(T, n)`, que retorna um `Ptr(T)` para `n` posições contíguas indexadas com `p[i]`.
+IntStack.empty :: () -> IntStack = IntStack { data: null, len: 0, cap: 0 }
 
-Por baixo dos panos, `New(T)` é a escrita de alto nível da primitiva de baixo nível `_alloc.alloc(T)`; ambas alocam através do alocador atual, então são intercambiáveis. `New` lê melhor em código comum.
+IntStack.push :: (v: int) {
+  if (_.len == _.cap) {
+    var grown: int = _.cap * 2
+    if (grown == 0) {
+      grown = 4
+    }
+    val buf: Ptr(int) = _alloc.alloc(int, grown)   // legal: método de handle dono
+    for (i : 0..(_.len - 1)) {
+      buf[i] = _.data[i]
+    }
+    if (_.cap > 0) {
+      _alloc.free(_.data)
+    }
+    _.data = buf
+    _.cap = grown
+  }
+  _.data[_.len] = v
+  _.len = _.len + 1
+}
 
-## Liberando com `defer`
+IntStack.pop :: () -> int {
+  _.len = _.len - 1
+  return _.data[_.len]
+}
 
-A memória que você aloca precisa ser devolvida. O padrão idiomático é parear cada alocação com um `defer Undo(p)`, colocado logo depois dela. (`Undo` é a liberação de alto nível; `_alloc.free(p)` é a primitiva de baixo nível por baixo, ambas passando pelo contexto.) `defer` agenda a liberação para rodar quando a função encerra, não importa por qual caminho.
-
-```dlang
-criarInimigo :: () {
-  val inimigo: Ptr(Pessoa) = New(Pessoa)
-  defer Undo(inimigo)   // devolvida ao fim da função
-
-  inimigo.value.nome = "Orc"
-  inimigo.value.idade = 150
+IntStack.deinit :: () {          // o compilador chama isto no último uso
+  if (_.cap > 0) {
+    _alloc.free(_.data)
+  }
 }
 ```
 
-Colocar o `defer` logo abaixo da alocação torna vazamentos fáceis de auditar: cada alocação tem sua liberação correspondente visível uma linha abaixo, e `defer` garante que ela rode mesmo em retornos antecipados ou erros. Liberar é *explícito* — a linguagem nunca libera por você, mas também nunca impede você de escolher exatamente quando um tempo de vida termina.
+Quem chama usa `IntStack` como um valor seguro comum: ele move como qualquer tipo `nocopy`, `E_USE_AFTER_MOVE` o protege, e o buffer é liberado automaticamente. O campo `Ptr(int)` é legal *porque* o struct é um dono `nocopy`+`deinit`; o mesmo campo num struct copiável é rejeitado onde quer que esse struct seja usado.
 
-## De onde vem a memória
-
-`New` não fixa o `malloc` da libc. Ele chama qualquer alocador atualmente instalado no contexto. Por padrão esse é o alocador baseado em malloc, então o exemplo acima se comporta como um `malloc`/`free` clássico. Mas você pode trocar o alocador para uma região de código — por exemplo, para um **alocador de depuração** que rastreia cada bloco vivo e reporta liberações duplas e vazamentos enquanto você desenvolve:
+Dentro dos métodos, o vocabulário cru é o clássico:
 
 ```dlang
-val prev: Allocator = pushAllocator(debugAllocator(mallocAllocator()))
-// ... alocações aqui são rastreadas ...
-debugReport(context().value)   // alocações / liberações / vazadas / erros
-popAllocator(prev)
+val h: Ptr(Pessoa) = New(Pessoa)    // aloca um T na heap   (= _alloc.alloc(T))
+Undo(h)                             // o free pareado       (= _alloc.free(h))
+val buf: Ptr(int) = New(int, 8)     // N elementos contíguos
+buf[3] = 42                         // indexação de ponteiro, sem verificação
+val p: Ptr(int) = ref score         // endereço-de
+p.value = 10                        // dereferência
 ```
 
-Toda alocação entre o push e o pop — incluindo as implícitas dentro de `string`, `List` e `Map` — flui pelo alocador instalado. Veja [Alocação Dinâmica](18-dynamic-allocation.md) para a API completa de alocadores.
+Não há verificação de limites nem de lifetime aqui dentro — esta é deliberadamente a camada auditada onde a garantia é responsabilidade do seu código, mantida pequena o bastante para auditar.
 
-## Justificativa de design
+## Embrulhando um recurso de C
 
-Memória manual é o padrão porque uma linguagem de sistemas deve oferecer controle previsível e de custo zero sobre a heap. Rotear a alocação por um alocador visível e trocável significa que não há alocação surpresa *e* não há cerimônia: você lê `New(T)` e sabe que uma alocação na heap acontece, e pode redirecionar tudo — o seu e o da biblioteca padrão — instalando um alocador diferente, sem reescrever uma única chamada. Parear alocação com `defer free` torna o gerenciamento de tempo de vida um padrão local e visível; e rotear derreferenciações por `.value` mantém cada acesso à memória explícito.
+Um recurso alocado por C — uma lista `addrinfo`, uma sessão SSL, um mapeamento de arquivo — recebe o mesmo tratamento: um handle dono cujos métodos fazem as chamadas cruas e cujo `deinit` o libera exatamente uma vez. `AddrInfoList` em `std/net/socket.dlang` é o modelo:
+
+```dlang
+getaddrinfo  :: (node: Ptr(byte), service: Ptr(byte), hints: Ptr(byte), res: Ptr(byte)) -> int
+freeaddrinfo :: (res: Ptr(byte)) -> void
+
+AddrInfoList :: nocopy struct { head: long }     // a lista crua, carregada como long opaco
+AddrInfoList.deinit :: () {
+  if (_.head != cast(long, 0)) {
+    freeaddrinfo(cast(Ptr(byte), _.head))        // liberado exatamente uma vez, automaticamente
+  }
+}
+```
+
+Dois idiomas de piso completam a história de FFI:
+
+- **Buffers de rascunho** para out-structs de C são um `ByteBuf` local: `ByteBuf.new(n)` + `.zeros(n)`, passe `.addr(0)` (um `long` opaco) para o C, leia os campos de volta com `.i32at`/`.i64at`. O buffer morre no último uso como qualquer dono — `std/time` e `std/net` são os modelos.
+- **Endereços viajam como `long`.** Uma expressão `Ptr` pode fluir *um salto* para um argumento extern C ou um método de handle dono/`string`; além disso, tudo cruza como `long` opaco (`ByteBuf.addr(i)`, `cast(long, s.cstr())`). Ponteiros nunca se espalham por assinaturas.
+
+## E o `defer`?
+
+`defer` continua existindo como ferramenta geral de controle (rodar um statement na saída da função), mas **não é mais como memória é liberada** — o `deinit` no último uso substituiu o idioma `defer Undo(p)`, e não pode ser esquecido nem duplicado. Use `defer` para efeitos que não são posse (logar, destravar em código que precede um dono, teardown de teste).
+
+## O alocador é um detalhe de implementação
+
+Os métodos dos donos roteiam alocações pelo alocador do runtime (`std/mem/allocator.dlang`). **Não há jeito suportado de código comum trocá-lo** — nenhuma API de alocador ambiente existe acima do piso. Os dois artefatos restantes (`debugAllocator` para rastrear vazamentos, e a arena em bloco que o compilador usa no próprio pipeline durante sua automigração) são ferramentas, compiladas com `--raw-floor` — a flag que desliga a lei de fronteira para código abaixo do modelo. Aplicações nunca precisam dessa flag.
+
+## Racional de design
+
+A memória manual não desapareceu — ela ganhou um *lugar*. O piso mantém DLang uma linguagem de sistemas: ponteiros de verdade, layout exato, FFI custo-zero, alocação que se lê. A lei de fronteira impede o piso de vazar para cima: o vocabulário inseguro fica confinado a tipos cuja única responsabilidade é posse, pequenos o bastante para auditar, embrulhados numa interface em que o verificador pode confiar. Toda propriedade de segurança acima (moves, borrows, projeções, `deinit` ASAP) repousa sobre esses handles estarem corretos — e é por isso que a linguagem faz de "onde código cru pode viver" uma lei imposta pelo compilador, não uma convenção.
 
 ## Relacionados
 
+- [Segurança de Memória](14a-memory-safety.md)
+- [Alocação Dinâmica — valores donos](18-dynamic-allocation.md)
 - [Ponteiros e Referências](12-pointers-and-references.md)
-- [Coleta de Lixo](14-garbage-collection.md)
-- [Alocação Dinâmica](18-dynamic-allocation.md)
+- [Interop com C](50-c-interop.md)
+- [Construtores e Destrutores](21-constructors-and-destructors.md)
 
 [← Índice](README.md)

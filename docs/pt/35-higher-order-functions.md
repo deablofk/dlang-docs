@@ -4,12 +4,12 @@ Uma função de ordem superior é aquela que recebe uma função como argumento 
 
 ## map, filtrar, reduce
 
-`map` transforma cada elemento e produz uma nova `List`. Ela não recebe um parâmetro de alocador: a nova lista cresce a partir do alocador atual, o mesmo contexto ambiente que toda alocação usa (veja [Alocação Dinâmica](18-dynamic-allocation.md)).
+`map` transforma cada elemento e produz uma nova `List`. A nova lista é um valor dono comum — cresce como qualquer `List` e morre no seu último uso (veja [Alocação Dinâmica](18-dynamic-allocation.md)).
 
 ```dlang
-// map: definida com generics; a nova lista cresce do alocador atual
+// map: definida com generics; a nova lista é um dono comum
 List(T).map(R) :: (transform: (T) -> R) -> List(R) {
-  var saida = List(R).empty()   // cresce do alocador atual (contexto ambiente)
+  var saida = List(R).empty()
   for (item : _) {
     saida.add(transform(item))
   }
@@ -76,22 +76,21 @@ val resultado = nums
 
 ## Retornar uma função
 
-Uma função de ordem superior também pode *retornar* uma função. Como a função retornada captura estado local e sobrevive ao seu escopo, isso é uma closure escapante e portanto aloca na heap seu ambiente capturado a partir do alocador atual — fiel à regra de [closures](34-closures.md):
+Uma função de ordem superior também pode *retornar* uma função. A closure retornada captura o que precisa **por valor** e seu ambiente vai para a heap, gerenciado pelo compilador como qualquer outro armazenamento com dono — sem alocador, sem ponteiro, sem sintaxe especial de chamada ([Closures](34-closures.md)):
 
 ```dlang
-// HOF que retorna uma função: uma closure escapante -> env na heap do alocador atual
-// devolve uma função que lembra do 'fator'
-multiplicador :: (fator: int) -> Ptr((int) -> int) {
-  return _alloc.closure({ _ * fator })   // captura 'fator' e sobrevive -> aloca
+// HOF que devolve uma função que lembra do 'fator'
+multiplicador :: (fator: int) -> (int) -> int {
+  return (x: int) -> int = x * fator
 }
 
 val triplicar = multiplicador(3)
-triplicar.value(10)   // 30 (chamada via .value, pois é ponteiro de closure alocada)
+triplicar(10)   // 30 — um valor de função comum, chamado diretamente
 ```
 
 ## Por quê
 
-Essas funções permanecem na biblioteca padrão como métodos genéricos comuns, o que significa que o núcleo da linguagem não precisa saber nada de especial sobre elas. Ao tirar do alocador atual, dispensam um parâmetro de alocador, e ao fazer `reduce` não alocar nada, mantêm a agregação barata.
+Essas funções permanecem na biblioteca padrão como métodos genéricos comuns, o que significa que o núcleo da linguagem não precisa saber nada de especial sobre elas. Estágios que constroem uma nova `List` retornam um valor dono que morre no seu último uso como qualquer outro, e `reduce` não aloca nada, mantendo a agregação barata.
 
 Há um custo que vale registrar: um pipeline como `filtrar().map()` cria uma **List intermediária em cada estágio** — cada estágio aloca. É exatamente o problema que o desenho parqueado de iteradores lazy resolveria depois, fundindo os estágios num único laço. Veja [Avaliação Preguiçosa](36-lazy-evaluation.md) para essa otimização futura e parqueada.
 

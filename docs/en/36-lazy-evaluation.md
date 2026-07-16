@@ -63,14 +63,14 @@ MapIter(T, R).proximo :: () -> (R, boolean) {
 }
 ```
 
-How it would be used: `.iter()` enters lazy mode, the intermediate stages only *compose*, and `.collect(alloc)` materializes once, with a single allocation:
+How it would be used: `.iter()` enters lazy mode, the intermediate stages only *compose*, and `.collect()` materializes once, with a single allocation:
 
 ```dlang
 val resultado = nums
   .iter()                // enter lazy mode — zero cost, nothing allocated
   .filtrar { _ > 0 }     // only COMPOSES
   .map      { _ * 2 }    // likewise
-  .collect(_alloc)       // HERE everything is materialized, once
+  .collect()             // HERE everything is materialized, once
 ```
 
 ### Why it is parked
