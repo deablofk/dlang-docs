@@ -94,8 +94,8 @@ de idioma no topo para mudar para English.)_
 
 ### Concorrência
 41. [Multithreading e Concorrência](41-concurrency.md)
-42. [Corotinas e Promises](42-coroutines-and-promises.md)
-43. [Programação Assíncrona (async/await)](43-async-await.md)
+42. [Concorrência Estruturada — Tasks e Futures](42-coroutines-and-promises.md)
+43. [spawn / await](43-async-await.md)
 44. [Canais e Passagem de Mensagens](44-channels.md)
 
 ### Metaprogramação

@@ -1,117 +1,95 @@
-# Coroutines and Promises
+# Structured Concurrency — Tasks and Futures
 
-Coroutines and promises in DLang are **standard-library types, not language syntax**. There is no `async`/`await` keyword and no function coloring. The model is library-first: stackful coroutines, promises, and channels are all ordinary `.dlang`, and the compiler exposes exactly one low-level intrinsic — a context switch — that everything else is built on.
+DLang has **no stackful coroutines and no `Promise` type**. Its answer to
+"compute a value on another thread and collect it later" is `Task(T)`, a
+**structured** future: it is an owning handle whose lifetime is tied to a scope,
+and it cannot outlive the scope that created it. This is the same MVS discipline
+the rest of the language uses, applied to concurrency (SPEC §23.4).
 
-This page builds directly on the threading primitives in [Multithreading and Concurrency](41-concurrency.md).
+This page describes the `Task(T)` type; the `spawn`/`await` surface that drives it
+is in [spawn / await](43-async-await.md).
 
-## The intrinsics, via `@intrinsic`
+## `Task(T)` — a joinable future
 
-There is no magic compiler namespace. The concurrency module declares three body-less functions and marks them with `@intrinsic("id")`; the compiler recognizes the id and injects the low-level implementation. This is the same annotation system used by atomics (see [Multithreading and Concurrency](41-concurrency.md)) and by macros and reflection (see [Metaprogramming and Reflection](45-metaprogramming-and-reflection.md)). An ordinary user never writes these — only the concurrency module does.
+A `Task(T)` represents a worker computing a `T`. It is a `nocopy` owning handle
+with a `deinit` that **joins** the worker — so a task is *synchronized by
+construction*:
 
-```dlang
-// 1. Context: an OPAQUE struct whose layout (registers + stack pointer +
-//    instruction pointer) is filled in by the compiler per platform.
-@intrinsic("contexto.tipo")
-Contexto :: struct {}
-
-// 2. Initialize 'ctx' so that, when resumed, it runs 'entrada' on 'pilha'.
-//    THE STACK IS MEMORY YOU ALLOCATE -> explicit cost.
-@intrinsic("contexto.criar")
-criarContexto :: (ctx: Ptr(Contexto), pilha: []byte, entrada: () -> ())
-
-// 3. Save the current context into 'de' and resume 'para'. The caller "freezes
-//    here" and only returns when someone switches back to 'de'. A fiber switch.
-@intrinsic("contexto.trocar")
-trocarContexto :: (de: Ptr(Contexto), para: Ptr(Contexto))
-```
-
-Crucially, the **call site stays a normal call**: you write `trocarContexto(...)` like any function. Only the *declaration* carries the annotation — moving from a namespace to an annotation never touched user code.
-
-## Coroutines are stackful
-
-Each coroutine has its own stack, and that stack is memory you allocate with an **explicit allocator**. A 64 KB stack is a visible line of code, not a hidden cost. Because the stack is real, a coroutine can yield from anywhere — there is no need to "color" functions as async.
+- `await t` joins the worker and **moves** its `T` result out.
+- If a task is never awaited, its `deinit` still joins the worker at scope exit
+  (the result is computed and then dropped). A task can never be silently
+  abandoned while its thread runs on.
 
 ```dlang
-Corrotina :: struct {
-  ctx: Contexto             // the coroutine's own state
-  retorno: Ptr(Contexto)    // where to return on yield
-  pilha: []byte             // its stack, allocated explicitly
-  terminada: boolean
+inline import("std/concurrency/task")
+
+sumTo :: (n: int) -> int {
+  var s: int = 0
+  var i: int = 1
+  while (i <= n) { s = s + i  i = i + 1 }
+  return s
 }
 
-// criar: the stack is allocated WITH AN EXPLICIT ALLOCATOR (visible cost)
-Corrotina.criar :: (alloc: Allocator, corpo: () -> ()) -> Ptr(Corrotina) {
-  val c: Ptr(Corrotina) = alloc.alloc(Corrotina)
-  c.value.pilha = alloc.allocBytes(64 * 1024)   // 64KB stack — you SEE the cost
-  c.value.terminada = false
-  criarContexto(ref c.value.ctx, c.value.pilha, corpo)
-  return c
+main :: () -> int {
+  val a: Task(int) = spawn sumTo(100)   // runs on a worker
+  val b: Task(int) = spawn sumTo(10)
+  println(await a + await b)            // 5050 + 55, computed concurrently
+  return 0
 }
 ```
 
-Resuming and yielding are just two directions of the same context switch. `retomar` freezes the caller and jumps into the coroutine; `ceder` (yield) freezes the coroutine and returns to whoever resumed it.
+## Why structured (no detached futures)
+
+Because `Task(T)` is affine and its `deinit` joins, the worker is guaranteed to
+finish within the scope that spawned it. There is no way to leak a running thread
+or to read a result before it is ready — the type system enforces the join. This
+is what "structured concurrency" means: concurrency nests like scopes do.
 
 ```dlang
-// retomar: save where I am and jump into the coroutine
-Corrotina.retomar :: (de_onde: Ptr(Contexto)) {
-  _.retorno = de_onde
-  trocarContexto(de_onde, ref _.ctx)   // freeze caller, thaw coroutine
-}
-
-// ceder (yield, from inside the coroutine): return to whoever resumed me
-Corrotina.ceder :: () {
-  trocarContexto(ref _.ctx, _.retorno)  // freeze coroutine, thaw caller
-}
+withResults :: () -> int {
+  val t: Task(int) = spawn sumTo(1000)
+  // ... other work, concurrent with the task ...
+  return await t          // guaranteed joined here
+}                         // (had we not awaited, deinit would join at this brace)
 ```
 
-## Promises are 100% library
+## Affine results move cleanly
 
-A `Promise(T)` adds zero compiler surface. It is just a struct holding a state and a value, resolved by one coroutine or thread and read by another. No syntactic `async`/`await` is involved anywhere.
-
-```dlang
-EstadoPromise :: enum { Pendente, Resolvida, Rejeitada }
-
-Promise(T) :: struct {
-  estado: EstadoPromise
-  valor: T
-  erro: any
-}
-
-Promise(T).criar :: (alloc: Allocator) -> Ptr(Promise(T)) {
-  val p: Ptr(Promise(T)) = alloc.alloc(Promise(T))
-  p.value.estado = EstadoPromise.Pendente
-  return p
-}
-
-// the producer resolves the promise
-Promise(T).resolver :: (v: T) {
-  _.valor = v
-  _.estado = EstadoPromise.Resolvida
-}
-```
-
-The consumer waits by **cooperatively yielding** until the promise is resolved. This does not block the OS thread: `aguardar` hands control back to the scheduler and resumes later, when the value is ready.
+A task can produce an owned value — the result is **moved** out of the worker on
+`await`, never copied or shared:
 
 ```dlang
-// the consumer waits by YIELDING the coroutine until resolved (cooperative,
-// does not block the OS thread — it returns control to the scheduler)
-Promise(T).aguardar :: (eu: Ptr(Corrotina)) -> T {
-  while (_.estado == EstadoPromise.Pendente) {
-    eu.value.ceder()
-  }
-  return _.valor
+buildList :: (n: int) -> List(int) {
+  var xs: List(int) = List(int).empty()
+  var i: int = 0
+  while (i < n) { xs.add(i)  i = i + 1 }
+  return xs
+}
+
+main :: () -> int {
+  val t: Task(List(int)) = spawn buildList(6)
+  var xs: List(int) = await t      // the List is MOVED out of the worker
+  println(xs.size())               // 6
+  return 0
 }
 ```
 
 ## Design rationale
 
-Stackful coroutines plus a single context-switch intrinsic give you everything `async`/`await` gives — suspension, resumption, waiting on a result — without splitting the world into colored and uncolored functions and without growing the compiler. The cost stays explicit: you see the allocator, you see the 64 KB stack, you see the executor (see [Multithreading and Concurrency](41-concurrency.md)) that schedules the work. Promises being plain structs means concurrency composes from data, exactly like the rest of the language.
+- **No function coloring.** `spawn`/`await` are ordinary expressions, not a
+  contagious `async` modifier. Any function can be spawned; nothing in a
+  signature has to change.
+- **No hidden runtime.** A `Task` is one OS thread (real pthreads), created when
+  you `spawn` and joined when you `await` or when the handle drops. There is no
+  scheduler running behind your back.
+- **Safety for free.** Because a spawned closure goes through the same
+  [send-check and move-in](41-concurrency.md) as any thread body, a task cannot
+  capture a borrowed owner or share mutable state by accident.
 
 ## Related
 
+- [spawn / await](43-async-await.md)
 - [Multithreading and Concurrency](41-concurrency.md)
-- [Async/Await Programming](43-async-await.md)
 - [Channels and Message Passing](44-channels.md)
-- [Manual Memory Management](13-manual-memory.md)
 
 [← Index](README.md)

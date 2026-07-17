@@ -1,117 +1,96 @@
-# Corrotinas e Promises
+# Concorrência Estruturada — Tasks e Futures
 
-Corrotinas e promises em DLang são **tipos da biblioteca padrão, não sintaxe da linguagem**. Não há palavra-chave `async`/`await` nem coloração de funções. O modelo é library-first: corrotinas stackful, promises e canais são todos `.dlang` comum, e o compilador expõe exatamente um intrínseco de baixo nível — uma troca de contexto — sobre o qual todo o resto é construído.
+DLang **não tem corrotinas com pilha nem um tipo `Promise`**. Sua resposta para
+"computar um valor em outra thread e coletá-lo depois" é `Task(T)`, um future
+**estruturado**: é um handle proprietário cujo tempo de vida está atado a um
+escopo, e que não pode sobreviver ao escopo que o criou. É a mesma disciplina de
+MVS que o resto da linguagem usa, aplicada à concorrência (SPEC §23.4).
 
-Esta página se constrói diretamente sobre os primitivos de threading em [Multithreading e Concorrência](41-concurrency.md).
+Esta página descreve o tipo `Task(T)`; a superfície `spawn`/`await` que o dirige
+está em [spawn / await](43-async-await.md).
 
-## Os intrínsecos, via `@intrinsic`
+## `Task(T)` — um future juntável
 
-Não há namespace mágico do compilador. O módulo de concorrência declara três funções sem corpo e as marca com `@intrinsic("id")`; o compilador reconhece o id e injeta a implementação de baixo nível. É o mesmo sistema de anotações usado pelos atômicos (ver [Multithreading e Concorrência](41-concurrency.md)) e por macros e reflexão (ver [Metaprogramação e Reflexão](45-metaprogramming-and-reflection.md)). Um usuário comum nunca escreve isto — só o módulo de concorrência.
+Um `Task(T)` representa um worker computando um `T`. É um handle proprietário
+`nocopy` com um `deinit` que faz o **join** do worker — então uma task é
+*sincronizada por construção*:
 
-```dlang
-// 1. Contexto: struct OPACA cujo layout (registradores + ponteiro de pilha +
-//    ponteiro de instrução) é preenchido pelo compilador por plataforma.
-@intrinsic("contexto.tipo")
-Contexto :: struct {}
-
-// 2. Inicializa 'ctx' para, ao ser retomado, executar 'entrada' sobre 'pilha'.
-//    A PILHA É MEMÓRIA QUE VOCÊ ALOCA -> custo explícito.
-@intrinsic("contexto.criar")
-criarContexto :: (ctx: Ptr(Contexto), pilha: []byte, entrada: () -> ())
-
-// 3. Salva o contexto atual em 'de' e retoma 'para'. Quem chama "congela aqui"
-//    e só volta quando alguém trocar de volta para 'de'. É a troca de fibra.
-@intrinsic("contexto.trocar")
-trocarContexto :: (de: Ptr(Contexto), para: Ptr(Contexto))
-```
-
-O ponto crucial: a **chamada continua normal**: você escreve `trocarContexto(...)` como qualquer função. Só a *declaração* carrega a anotação — migrar de um namespace para uma anotação nunca tocou no código do usuário.
-
-## Corrotinas são stackful
-
-Cada corrotina tem sua própria pilha, e essa pilha é memória que você aloca com um **alocador explícito**. Uma pilha de 64 KB é uma linha de código visível, não um custo escondido. Como a pilha é real, uma corrotina pode ceder de qualquer lugar — não há necessidade de "colorir" funções como assíncronas.
+- `await t` faz o join do worker e **move** o resultado `T` para fora.
+- Se uma task nunca é aguardada, seu `deinit` ainda assim faz o join do worker na
+  saída do escopo (o resultado é computado e então descartado). Uma task nunca
+  pode ser abandonada silenciosamente enquanto sua thread continua.
 
 ```dlang
-Corrotina :: struct {
-  ctx: Contexto             // estado da própria corrotina
-  retorno: Ptr(Contexto)    // pra onde voltar quando der 'yield'
-  pilha: []byte             // pilha dela, alocada explicitamente
-  terminada: boolean
+inline import("std/concurrency/task")
+
+sumTo :: (n: int) -> int {
+  var s: int = 0
+  var i: int = 1
+  while (i <= n) { s = s + i  i = i + 1 }
+  return s
 }
 
-// criar: a pilha é alocada COM ALOCADOR EXPLÍCITO (custo visível)
-Corrotina.criar :: (alloc: Allocator, corpo: () -> ()) -> Ptr(Corrotina) {
-  val c: Ptr(Corrotina) = alloc.alloc(Corrotina)
-  c.value.pilha = alloc.allocBytes(64 * 1024)   // 64KB de pilha — você VÊ o custo
-  c.value.terminada = false
-  criarContexto(ref c.value.ctx, c.value.pilha, corpo)
-  return c
+main :: () -> int {
+  val a: Task(int) = spawn sumTo(100)   // roda num worker
+  val b: Task(int) = spawn sumTo(10)
+  println(await a + await b)            // 5050 + 55, computados concorrentemente
+  return 0
 }
 ```
 
-Retomar e ceder são apenas duas direções da mesma troca de contexto. `retomar` congela o chamador e pula para dentro da corrotina; `ceder` (yield) congela a corrotina e volta para quem a retomou.
+## Por que estruturada (sem futures desacoplados)
+
+Como `Task(T)` é afim e seu `deinit` faz o join, o worker está garantido a
+terminar dentro do escopo que o criou. Não há como vazar uma thread em execução
+nem ler um resultado antes de estar pronto — o sistema de tipos força o join. É
+isto que "concorrência estruturada" significa: a concorrência aninha como os
+escopos aninham.
 
 ```dlang
-// retomar: salva onde estou e pulo pra dentro da corrotina
-Corrotina.retomar :: (de_onde: Ptr(Contexto)) {
-  _.retorno = de_onde
-  trocarContexto(de_onde, ref _.ctx)   // congela o chamador, descongela a corrotina
+withResults :: () -> int {
+  val t: Task(int) = spawn sumTo(1000)
+  // ... outro trabalho, concorrente com a task ...
+  return await t          // garantidamente juntado aqui
+}                         // (se não tivéssemos aguardado, o deinit faria o join aqui)
+```
+
+## Resultados afins movem-se de forma limpa
+
+Uma task pode produzir um valor próprio — o resultado é **movido** para fora do
+worker no `await`, nunca copiado nem compartilhado:
+
+```dlang
+buildList :: (n: int) -> List(int) {
+  var xs: List(int) = List(int).empty()
+  var i: int = 0
+  while (i < n) { xs.add(i)  i = i + 1 }
+  return xs
 }
 
-// ceder (yield, de dentro da corrotina): volto pra quem me retomou
-Corrotina.ceder :: () {
-  trocarContexto(ref _.ctx, _.retorno)  // congela a corrotina, descongela o chamador
+main :: () -> int {
+  val t: Task(List(int)) = spawn buildList(6)
+  var xs: List(int) = await t      // a List é MOVIDA para fora do worker
+  println(xs.size())               // 6
+  return 0
 }
 ```
 
-## Promises são 100% biblioteca
+## Justificativa de projeto
 
-Uma `Promise(T)` adiciona zero superfície de compilador. É só uma struct guardando um estado e um valor, resolvida por uma corrotina ou thread e lida por outra. Nenhum `async`/`await` de sintaxe está envolvido em lugar nenhum.
-
-```dlang
-EstadoPromise :: enum { Pendente, Resolvida, Rejeitada }
-
-Promise(T) :: struct {
-  estado: EstadoPromise
-  valor: T
-  erro: any
-}
-
-Promise(T).criar :: (alloc: Allocator) -> Ptr(Promise(T)) {
-  val p: Ptr(Promise(T)) = alloc.alloc(Promise(T))
-  p.value.estado = EstadoPromise.Pendente
-  return p
-}
-
-// o produtor resolve a promessa
-Promise(T).resolver :: (v: T) {
-  _.valor = v
-  _.estado = EstadoPromise.Resolvida
-}
-```
-
-O consumidor espera **cedendo cooperativamente** até a promessa ser resolvida. Isso não bloqueia a thread do SO: `aguardar` devolve o controle ao escalonador e volta depois, quando o valor estiver pronto.
-
-```dlang
-// o consumidor espera CEDENDO a corrotina até resolver (cooperativo, não
-// bloqueia a thread do SO — devolve o controle ao escalonador e volta depois)
-Promise(T).aguardar :: (eu: Ptr(Corrotina)) -> T {
-  while (_.estado == EstadoPromise.Pendente) {
-    eu.value.ceder()
-  }
-  return _.valor
-}
-```
-
-## Por quê
-
-Corrotinas stackful mais um único intrínseco de troca de contexto dão tudo o que `async`/`await` dá — suspensão, retomada, espera por um resultado — sem dividir o mundo em funções coloridas e não coloridas e sem inchar o compilador. O custo continua explícito: você vê o alocador, vê a pilha de 64 KB, vê o executor (ver [Multithreading e Concorrência](41-concurrency.md)) que agenda o trabalho. Promises sendo structs comuns significa que a concorrência se compõe a partir de dados, exatamente como o resto da linguagem.
+- **Sem coloração de funções.** `spawn`/`await` são expressões comuns, não um
+  modificador `async` contagioso. Qualquer função pode ser lançada; nada numa
+  assinatura precisa mudar.
+- **Sem runtime escondido.** Uma `Task` é uma thread do SO (pthreads reais),
+  criada quando você faz `spawn` e juntada quando você faz `await` ou quando o
+  handle é destruído. Não há escalonador rodando por trás.
+- **Segurança de graça.** Como um closure lançado passa pela mesma
+  [send-check e move-in](41-concurrency.md) de qualquer corpo de thread, uma task
+  não pode capturar um dono emprestado nem compartilhar estado mutável por acaso.
 
 ## Relacionados
 
+- [spawn / await](43-async-await.md)
 - [Multithreading e Concorrência](41-concurrency.md)
-- [Programação Assíncrona (async/await)](43-async-await.md)
 - [Canais e Passagem de Mensagens](44-channels.md)
-- [Gerenciamento de memória manual](13-manual-memory.md)
 
 [← Índice](README.md)

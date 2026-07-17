@@ -1,43 +1,97 @@
-# Programação Assíncrona (async/await)
+# spawn / await
 
-> Status: Ausente como sintaxe.
+DLang expressa trabalho assíncrono com duas **palavras-chave contextuais**,
+`spawn` e `await`, sobre o tipo `Task(T)`
+([Concorrência Estruturada](42-coroutines-and-promises.md)). Não são um
+`async`/`await` colorido no sentido de Rust/JS: não há cor de função suspensível,
+nem executor para instalar, nem mudança na assinatura da função. `spawn e` executa
+`e` numa thread worker; `await t` faz o join e pega o resultado.
 
-DLang não tem palavra-chave `async` nem `await`. A programação assíncrona é totalmente suportada, mas é obtida inteiramente pelo modelo de concorrência library-first — corrotinas stackful, promises, canais e um executor explícito — em vez de sintaxe dedicada.
+Ambas são *contextuais* — um identificador comum chamado `spawn` ou `await` ainda
+é reconhecido como tal. Elas só agem como palavras-chave quando seguidas de uma
+expressão.
 
-## Não existe `async`/`await`
+## `spawn e` — executar num worker
 
-Em muitas linguagens, `async` marca uma função como suspensível e `await` a suspende até um resultado estar pronto. DLang omite ambos de propósito. Os mesmos resultados são expressos com chamadas de biblioteca comuns já descritas em outros tópicos:
-
-- **Suspensão e retomada** vêm de corrotinas stackful: `Corrotina.retomar` e `Corrotina.ceder` (yield). Ver [Corrotinas e Promises](42-coroutines-and-promises.md).
-- **Esperar por um resultado** é `Promise(T).aguardar`, que cede cooperativamente até a promessa resolver — exatamente o comportamento que uma expressão `await` fornece, mas como uma chamada de método comum.
-- **Escalonamento** é um `Executor` explícito, o "alocador da concorrência". Ver [Multithreading e Concorrência](41-concurrency.md).
-- **Comunicação** entre tarefas concorrentes é feita com `Canal(T)`. Ver [Canais e Passagem de Mensagens](44-channels.md).
-
-Uma "tarefa que aguarda um valor" é simplesmente uma corrotina que chama `aguardar` em uma promise:
+`spawn e` avalia `e` num novo worker e produz uma `Task(T)`, onde `T` é o tipo de
+`e`. O tipo do elemento é **inferido**, então nenhuma anotação é necessária:
 
 ```dlang
-// sem 'async' na função, sem expressão 'await' — só chamadas de biblioteca
-buscarUsuario :: (eu: Ptr(Corrotina), p: Ptr(Promise(string))) {
-  val nome = p.value.aguardar(eu)   // cede cooperativamente até resolver
-  println("recebido: ${nome}")
+inline import("std/concurrency/task")
+
+val a = spawn sumTo(100)      // a : Task(int)  — inferido
+val b: Task(int) = spawn sumTo(10)   // anotação opcional
+```
+
+`spawn` é uma expressão prefixa comum, então funciona em **qualquer posição**, não
+só numa ligação:
+
+```dlang
+// como o receptor de await — executa e espera imediatamente
+val n: int = await spawn compute(x)
+
+// como argumento de chamada
+useTask(spawn sumTo(5))
+
+// retornado diretamente
+makeTask :: () -> Task(int) = spawn sumTo(50)
+```
+
+Internamente o compilador expande `spawn e` para `Task(T).start(() -> T = e)`;
+você nunca escreve isso à mão.
+
+## `await t` — juntar e pegar o resultado
+
+`await t` faz o join do worker de `t` e **move** o `T` computado para fora. É
+escrito como uma expressão prefixa:
+
+```dlang
+val total: int = await a + await b     // ambos juntados, resultados somados
+```
+
+Aguardar é o ponto onde o resultado do worker fica disponível; antes disso, a task
+está apenas rodando. Uma task que nunca é aguardada ainda é juntada quando seu
+handle é destruído (concorrência estruturada — veja o capítulo 42).
+
+## Capturas são verificadas e movidas para dentro
+
+Como `spawn e` vira um corpo de thread, as capturas de `e` passam pela mesma
+[send-check e move-in](41-concurrency.md) de qualquer closure de thread:
+
+```dlang
+listSum :: (sink xs: List(int)) -> int {
+  var s: int = 0
+  for (x : xs) { s = s + x }
+  return s
+}
+
+main :: () -> int {
+  var xs: List(int) = List(int).empty()
+  xs.add(3); xs.add(4); xs.add(5)
+  val s: int = await spawn listSum(xs)   // xs é MOVIDO para o worker
+  // xs não pode ser usado aqui — E_USE_AFTER_MOVE
+  println(s)                             // 12
+  return 0
 }
 ```
 
-## Por que está ausente
+Uma captura copiável recebe snapshot; uma captura afim própria é movida para
+dentro; uma captura afim emprestada é `E_NOT_SENDABLE`. Veja
+[Multithreading](41-concurrency.md) para as regras completas.
 
-O par de palavras-chave async/await é deixado de fora por três razões que se reforçam:
+## Por que não um `async`/`await` colorido?
 
-1. **Evita a coloração de funções.** Com `async`/`await`, a cor de uma função (síncrona vs. assíncrona) vaza para todo chamador e força uma cópia "colorida" paralela de boa parte do ecossistema. Como as corrotinas de DLang são stackful, qualquer função pode ceder de qualquer lugar; não há cor para propagar.
-2. **Mantém o compilador minúsculo.** Toda a história de concorrência se apoia em um intrínseco de troca de contexto mais alguns atômicos (ver [Corrotinas e Promises](42-coroutines-and-promises.md)). Adicionar `async`/`await` significaria uma transformação em máquina de estados e novas regras de tipo embutidas no compilador, para um comportamento que a biblioteca já entrega.
-3. **Mantém o custo explícito.** Com o modelo de biblioteca você vê o alocador, a pilha de 64 KB da corrotina e o executor que a agenda. Uma palavra-chave que conjura máquinas de estado escondidas e um runtime implícito esconderia exatamente os custos que uma linguagem de sistema precisa manter visíveis.
-
-## Por quê
-
-Async/await é açúcar sintático conveniente para uma ideia — suspensão cooperativa esperando por um resultado — que DLang já expressa com valores: corrotinas, promises, canais e um executor explícito. Escolher a forma de biblioteca mantém as funções sem cor, o compilador pequeno e cada custo na página. A feature está "ausente como sintaxe" precisamente *porque* a capacidade está totalmente presente como biblioteca.
+- **Sem coloração de funções.** `spawn`/`await` são expressões, então uma função
+  lançada é uma função comum — sua assinatura não muda e os chamadores não são
+  forçados a virar assíncronos também.
+- **Sem executor.** Uma `Task` é sustentada por uma thread do SO real; não há
+  runtime para configurar ou iniciar.
+- **Estruturada por padrão.** `await` (ou o handle da task sendo destruído) sempre
+  faz o join, então um worker não pode sobreviver ao seu escopo.
 
 ## Relacionados
 
-- [Corrotinas e Promises](42-coroutines-and-promises.md)
+- [Concorrência Estruturada — Tasks e Futures](42-coroutines-and-promises.md)
 - [Multithreading e Concorrência](41-concurrency.md)
 - [Canais e Passagem de Mensagens](44-channels.md)
 

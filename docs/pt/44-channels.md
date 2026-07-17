@@ -1,88 +1,129 @@
 # Canais e Passagem de Mensagens
 
-Um canal em DLang é uma struct genérica da biblioteca padrão — **zero envolvimento do compilador**. Ele dá comunicação no estilo CSP (estilo Go): corrotinas e threads se coordenam passando *mensagens* em vez de compartilhar memória. Um canal é construído inteiramente a partir de peças que você já viu: um `Mutex`, uma lista de buffer e cooperação com o `Executor` (ver [Multithreading e Concorrência](41-concurrency.md)).
+Um `Channel(T)` dá comunicação no estilo CSP (estilo Go): threads coordenam
+**movendo valores** através do canal em vez de compartilhar memória. `send` move um
+`T` para fora do produtor; `recv` move-o para dentro do consumidor — sem estado
+mutável compartilhado, apenas a posse passada através da fronteira de thread
+(SPEC §23.5). Tipos de elemento afins (ex.: `Channel(List(int))`) movem-se de
+forma limpa, já que nada é jamais aliasado.
 
-## A struct do canal
-
-`Canal(T)` é uma struct genérica sobre um buffer, uma capacidade, uma trava e uma flag de fechado. Capacidade `0` significa um canal de rendezvous sem buffer; capacidade positiva significa um canal bufferizado.
-
-```dlang
-Canal(T) :: struct {
-  buffer: List(T)
-  capacidade: int     // 0 = sem buffer (rendezvous); >0 = bufferizado
-  trava: Mutex
-  fechado: boolean
-}
-
-Canal(T).criar :: (alloc: Allocator, capacidade: int) -> Ptr(Canal(T)) { ... }
-```
+Um canal é um handle proprietário contado por referência atomicamente: `make()`
+o cria, `clone()` cria outro handle para o mesmo canal, e o último handle a ser
+destruído o libera.
 
 ## Enviar e receber
 
-As duas pontas se coordenam pelo mesmo mecanismo cooperativo: quando uma operação não pode prosseguir, ela **cede a corrotina** em vez de bloquear a thread do SO, devolvendo o controle ao escalonador. `enviar` cede enquanto o buffer está cheio; `receber` cede enquanto está vazio (e o canal ainda está aberto).
-
 ```dlang
-// enviar: bloqueia CEDENDO a corrotina se o buffer estiver cheio
-Canal(T).enviar :: (eu: Ptr(Corrotina), valor: T) {
-  _.trava.travar()
-  defer _.trava.destravar()
-  while (_.buffer.tamanho >= _.capacidade) eu.value.ceder()
-  _.buffer.add(valor)
+val channel = import("std/concurrency/channel")
+inline import("std/concurrency/task")
+
+produce :: (sink tx: channel.Channel(int), n: int) -> int {
+  var i: int = 1
+  while (i <= n) { tx.send(i)  i = i + 1 }
+  return n
 }
 
-// receber: devolve (valor, ok). ok=false quando o canal foi fechado e esvaziou.
-Canal(T).receber :: (eu: Ptr(Corrotina)) -> (T, boolean) {
-  _.trava.travar()
-  defer _.trava.destravar()
-  while (_.buffer.tamanho == 0 && !_.fechado) eu.value.ceder()
-  if (_.buffer.tamanho == 0) return (zero(T), false)   // fechado e vazio
-  return (_.buffer.removerPrimeiro(), true)
+main :: () -> int {
+  val ch: channel.Channel(int) = channel.Channel(int).make()
+  val tx: channel.Channel(int) = ch.clone()
+  val t: Task(int) = spawn produce(tx, 100)    // tx movido para o worker
+  var sum: int = 0
+  var i: int = 0
+  while (i < 100) { sum = sum + ch.recv()  i = i + 1 }   // recv MOVE cada valor para fora
+  await t
+  println(sum)                                  // 5050
+  return 0
 }
-
-Canal(T).fechar :: () { _.fechado = true }
 ```
 
-O retorno `(valor, ok)` é uma tupla comum (ver [Tuplas e Desestruturação](38-tuples-and-destructuring.md)): `ok` é `false` exatamente quando o canal está fechado e vazio, o que é o sinal para um consumidor parar.
+`recv()` bloqueia numa variável de condição até um item estar disponível, então o
+move para fora. O `recv()` simples assume que o consumidor sabe quantos itens
+esperar — ele bloquearia para sempre num canal fechado e vazio. Para canais que
+são fechados, use as formas cientes de fechamento abaixo.
 
-## Produtor / consumidor
+## Fechando um canal
 
-Um produtor agenda uma corrotina que envia alguns valores e então fecha o canal; um consumidor agenda outra que lê até o canal fechar, desestruturando a tupla `(v, ok)` a cada vez. `euMesmo()` é um helper da std lib que devolve a corrotina atual.
+`close()` sinaliza o fim do fluxo e acorda todo receptor bloqueado. Um `send` num
+canal fechado descarta seu valor e não enfileira nada.
+
+Como um `T` afim não tem um "zero" para devolver no caso vazio, os `recv` cientes
+de fechamento devolvem um **`ChanItem(T)`** — um opcional proprietário seguro para
+movimento, que ou contém o item retirado ou está vazio porque o canal está
+fechado:
 
 ```dlang
-exemploCanal :: (exec: Ptr(Executor)) {
-  val canal = Canal(int).criar(_alloc, 8)
-
-  // produtor
-  exec.value.agendar(Corrotina.criar(_alloc, {
-    var i = 0
-    while (i < 5) { canal.value.enviar(euMesmo(), i); i++ }
-    canal.value.fechar()
-  }))
-
-  // consumidor: lê até o canal fechar, desestruturando a tupla (v, ok)
-  exec.value.agendar(Corrotina.criar(_alloc, {
-    while (true) {
-      val (v, ok) = canal.value.receber(euMesmo())
-      if (!ok) break
-      println("recebido: ${v}")
+consume :: (sink rx: channel.Channel(int)) -> int {
+  var total: int = 0
+  var live: boolean = true
+  while (live) {
+    var it: channel.ChanItem(int) = rx.recvOrClosed()   // bloqueia até item ou fechado
+    if (it.present()) {
+      total = total + it.take()      // MOVE o item para fora
+    } else {
+      live = false                   // canal fechado e drenado
     }
-  }))
+  }
+  return total
 }
 ```
 
-## `select` é uma função de biblioteca, não sintaxe
+- `recvOrClosed()` bloqueia até um item estar disponível **ou** o canal estar
+  fechado e drenado.
+- `tryRecv()` é a forma não bloqueante (retorna imediatamente; `isClosed()`
+  distingue "fechado" de "vazio agora").
+- `it.present()` → `it.take()` move o item para fora; caso contrário o canal
+  terminou.
 
-Esperar em vários canais ao mesmo tempo — o `select` do Go — **não** é uma construção do compilador em DLang. É uma função da biblioteca padrão (ou macro; ver [Macros e Expansão de Código](46-macros.md)). Isso é coerente com a regra da linguagem de que *comportamento é açúcar sobre dados*: o controle sobre múltiplos canais é expresso por código de biblioteca comum, não por uma nova palavra-chave.
+O produtor fecha quando termina:
 
-## Por quê
+```dlang
+producer :: (sink tx: channel.Channel(int), n: int) -> int {
+  var i: int = 1
+  while (i <= n) { tx.send(i)  i = i + 1 }
+  tx.close()
+  return n
+}
+```
 
-Canais dão coordenação segura sem malabarismo manual de locks, mas não exigem nada do compilador: `Canal(T)` é uma struct genérica em camadas sobre um `Mutex` e o escalonamento cooperativo do executor. Manter até o `select` na biblioteca, em vez da gramática, sustenta a regra de que a superfície de DLang permanece pequena e sua concorrência permanece auditável — cada envio, recebimento e espera é código simples que você pode ler.
+## Selecionando entre canais
+
+`selectRecv2(a, b)` bloqueia até qualquer um de dois canais ter um item (ou ambos
+estarem fechados e drenados). É um select bloqueante de verdade — o selecionador
+registra um único waiter compartilhado com ambos os canais e dorme sobre ele, em
+vez de fazer spin. Ele recebe seus handles por `sink`, então passe clones para
+continuar selecionando:
+
+```dlang
+var sel: channel.Selected(int) = channel.Channel(int).selectRecv2(ca.clone(), cb.clone())
+if (sel.which == -1) {
+  // ambos os canais fechados e drenados
+} else {
+  use(sel.which, sel.item.take())   // which = 0 (a) ou 1 (b)
+}
+```
+
+Para um número **dinâmico** de canais, `SelectSet(T)` é a generalização N-ária:
+construa-o uma vez, depois faça `recv()` num laço.
+
+```dlang
+var set: channel.SelectSet(int) = channel.SelectSet(int).of()
+set.add(a.clone()); set.add(b.clone()); set.add(c.clone())
+var live: boolean = true
+while (live) {
+  var r: channel.Selected(int) = set.recv()
+  if (r.which == -1) { live = false }        // todos os canais fechados
+  else { use(r.which, r.item.take()) }        // which = ordem de adição (base 0)
+}
+```
+
+`SelectSet` possui um único waiter compartilhado e inscreve cada canal uma vez,
+então o laço não aloca nenhuma condvar por chamada; `deinit` cancela as inscrições
+e destrói os clones.
 
 ## Relacionados
 
-- [Corrotinas e Promises](42-coroutines-and-promises.md)
 - [Multithreading e Concorrência](41-concurrency.md)
-- [Programação Assíncrona (async/await)](43-async-await.md)
-- [Tuplas e Desestruturação](38-tuples-and-destructuring.md)
+- [Concorrência Estruturada — Tasks e Futures](42-coroutines-and-promises.md)
+- [spawn / await](43-async-await.md)
 
 [← Índice](README.md)

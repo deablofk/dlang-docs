@@ -14,22 +14,26 @@ class DLangLexer(RegexLexer):
 
     keywords = (
         'val', 'var', 'const', 'if', 'else', 'match', 'while', 'for',
-        'return', 'defer', 'try', 'catch', 'throws', 'import', 'namespace',
-        'struct', 'enum', 'interface', 'as', 'lazy', 'ref', 'break',
-        'continue', 'in', 'quote', 'operator_add', 'operator_get',
-        'operator_set',
+        'return', 'defer', 'try', 'catch', 'throws', 'import', 'inline',
+        'namespace', 'struct', 'enum', 'interface', 'as', 'lazy', 'ref',
+        'break', 'continue', 'in', 'quote', 'nocopy',
+        # parameter conventions
+        'borrow', 'inout', 'sink', 'set', 'sending',
+        # structured concurrency (contextual keywords)
+        'spawn', 'await',
+        'operator_add', 'operator_get', 'operator_set',
     )
     builtin_types = (
         'byte', 'short', 'int', 'long', 'float', 'double', 'boolean',
         'char', 'string', 'String', 'any', 'type', 'void',
-        'Ptr', 'List', 'Map', 'Codigo', 'Allocator', 'Contexto',
-        'Corrotina', 'Promise', 'Canal', 'Executor', 'Thread', 'Mutex',
-        'Iter', 'Vetor', 'Matriz', 'Buffer',
+        'Ptr', 'List', 'Map', 'Allocator', 'ByteBuf', 'Pool',
+        # concurrency (std/concurrency)
+        'Thread', 'Task', 'Mutex', 'Channel', 'Shared', 'Atomic',
+        'ChanItem', 'Selected', 'SelectSet',
+        'Iter', 'Buffer',
     )
     builtins = (
-        'println', 'print', 'cast', 'infoDe', 'tamanhoDe', 'texto', 'zero',
-        'euMesmo', 'criarContexto', 'trocarContexto', 'atomicoCAS',
-        'atomicoSomar', 'barreiraMemoria',
+        'println', 'print', 'cast', 'funcaddr',
     )
     constants = ('true', 'false', 'null')
 

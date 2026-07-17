@@ -1,107 +1,183 @@
 # Multithreading and Concurrency
 
-DLang treats concurrency the same way it treats memory: as something the *library* provides, not something the compiler hides. OS threads, mutexes, and the scheduler are all ordinary `.dlang` code. The only thing the compiler contributes is the handful of operations that cannot be written in the language itself — atomic instructions and memory barriers — because those map directly to hardware.
+DLang's concurrency is **data-race free by construction**. A data race needs two
+threads with *aliased mutable access* to one datum. Under Mutable Value Semantics
+there is no aliasing — a value handed to another thread is **copied or moved,
+never shared** — so the ingredient a race requires is simply absent. This is
+Hylo's concurrency model, and DLang inherits it; the compiler's job is to turn
+that from an accident of how closures capture into a **checked** guarantee. The
+full specification is SPEC §23.
 
-This page covers the threading and scheduling primitives. The cooperative half of the story — coroutines, promises, channels — builds on top of these and lives in [Coroutines and Promises](42-coroutines-and-promises.md) and [Channels and Message Passing](44-channels.md).
+The primitives are ordinary standard-library code (`std/concurrency/*.dlang`)
+over real pthreads. Nothing is hidden: there is no background runtime and no
+global scheduler.
 
-## The only compiler intrinsics: atomics
+## OS threads — `Thread`
 
-A `compare-and-swap`, an atomic add, and a memory fence cannot be expressed with normal statements — they correspond to specific CPU instructions. DLang exposes them through the same `@intrinsic` annotation used everywhere else: a body-less declaration carries the annotation, and the compiler injects the implementation. The call site is a perfectly normal function call.
-
-```dlang
-@intrinsic("atomic.cas")        // compare-and-swap
-atomicoCAS :: (alvo: Ptr(int), esperado: int, novo: int) -> boolean
-
-@intrinsic("atomic.add")
-atomicoSomar :: (alvo: Ptr(int), delta: int) -> int
-
-@intrinsic("atomic.fence")
-barreiraMemoria :: ()
-```
-
-Note that there is no magic `atomic` namespace. These are three ordinary declarations that happen to be marked `@intrinsic` — the same mechanism the concurrency module uses for context switching (see [Coroutines and Promises](42-coroutines-and-promises.md)) and that metaprogramming uses for compiler hooks (see [Metaprogramming and Reflection](45-metaprogramming-and-reflection.md)).
-
-## OS threads are a struct
-
-A `Thread` is a standard-library struct wrapping an opaque OS handle. Its methods are written in DLang; the body reaches the real OS thread through FFI (`@externo`). Creating a thread takes an explicit allocator and the function to run.
+`Thread.start` runs a closure on a fresh OS thread and returns a handle;
+`join` waits for it, `detach` lets it run unowned.
 
 ```dlang
-Thread :: struct {
-  handle: Ptr(byte)             // opaque OS handle
-}
+inline import("std/concurrency/thread")
 
-Thread.criar :: (alloc: Allocator, corpo: () -> ()) -> Ptr(Thread) { ... }
-Thread.aguardar :: () { ... }   // join: wait for the thread to finish
+work :: () -> () = { println("running on another thread") }
 
-trabalho :: () { println("running on another thread") }
-
-usoThread :: () {
-  val t = Thread.criar(_alloc, trabalho)
-  defer t.value.aguardar()
+main :: () -> int {
+  val t: Thread = Thread.start(work)
+  t.join()                     // wait for it to finish
+  return 0
 }
 ```
 
-`aguardar` is the join: pairing it with `defer` guarantees the spawning function waits for its thread before returning.
+The body parameter is declared `sending` (see below), which is what subjects its
+captures to the safety check.
 
-## Mutex: pure library on top of an atomic
+## What may cross a thread — the send-check
 
-Because the atomic CAS is available as an ordinary call, a mutex needs no compiler support at all. It is a struct holding a single integer, locked by spinning on `atomicoCAS` and unlocked by clearing the flag.
+A closure handed to a thread captures **by value**. Whether a capture may cross
+the boundary is decided at compile time, on every build:
 
-```dlang
-Mutex :: struct { travado: int }
-
-Mutex.travar :: () {
-  while (!atomicoCAS(ref _.travado, 0, 1)) {
-    // busy: yield (coroutine) or spin (thread)
-  }
-}
-Mutex.destravar :: () { _.travado = 0 }
-```
-
-Use it with `defer` so the lock is released on every exit path — including early returns and errors:
+- **Copyable, deinit-free values** (`int`, a genuinely-copyable view) are sent by
+  **snapshot** — each thread gets its own independent copy.
+- An **owned affine value** (a local, or a `sink`/`sending` parameter) is sent by
+  **move**: the thread takes ownership and the outer scope relinquishes it. A
+  later use in the outer scope is `E_USE_AFTER_MOVE`.
+- A **borrowed affine value** (a `borrow`/`inout` parameter) or a **projection**
+  is **not sendable** — you cannot move what you do not own, and a by-value
+  capture would alias the caller's buffer: `E_NOT_SENDABLE`.
 
 ```dlang
-depositar :: (m: Ptr(Mutex), saldo: Ptr(int)) {
-  m.value.travar()
-  defer m.value.destravar()
-  saldo.value = saldo.value + 100
-}
-```
-
-## The Executor: the "allocator of concurrency"
-
-Just as nothing allocates heap without a visible `Allocator`, nothing schedules coroutines without a visible `Executor`. The executor owns the work queue and the pool of OS threads; you pass `_exec` around on purpose, exactly as you pass `_alloc`. There is **no hidden global runtime** — unlike Go, DLang never starts a scheduler behind your back.
-
-```dlang
-Executor :: struct {
-  fila: List(Ptr(Corrotina))
-  threads: List(Ptr(Thread))
-}
-
-Executor.criar :: (alloc: Allocator, numThreads: int) -> Ptr(Executor) { ... }
-Executor.agendar :: (c: Ptr(Corrotina)) { _.fila.add(c) }   // enqueue work
-Executor.rodar :: () { ... }   // distribute coroutines across the threads
-
-usoExecutor :: () {
-  val exec = Executor.criar(_alloc, 4)        // 4 OS threads
-  defer exec.value.rodar()
-
-  exec.value.agendar(Corrotina.criar(_alloc, { println("task 1") }))
-  exec.value.agendar(Corrotina.criar(_alloc, { println("task 2") }))
+spawnList :: (xs: List(int)) -> () {     // xs is a BORROW
+  worker :: () -> () = { println(xs.size()) }
+  val t = Thread.start(worker)           // E_NOT_SENDABLE — 'xs' is borrowed
+  t.join()
 }
 ```
 
-The executor multiplexes many cheap cooperative coroutines onto a small number of OS threads. The coroutines themselves are explained in [Coroutines and Promises](42-coroutines-and-promises.md).
+To move an owned value into the thread, own it (a local, or take it `sink`):
 
-## Design rationale
+```dlang
+consume :: (sink xs: List(int)) -> () {
+  worker :: () -> () = { println(xs.size()) }   // xs MOVED into the thread
+  val t = Thread.start(worker)
+  t.join()
+  // using xs here would be E_USE_AFTER_MOVE — the thread owns it now
+}
+```
 
-A systems language must not bury concurrency under an invisible runtime. By keeping `Thread`, `Mutex`, and `Executor` as ordinary library code and reducing the compiler's role to three atomic intrinsics, DLang keeps the implementation auditable and the cost visible. The executor mirrors the allocator: making the scheduler an explicit value means you always know what is scheduling your work and on how many threads, with no global magic to reason around.
+The moved-in owner is reclaimed by the thread body when it finishes — no leak,
+allocator-balanced.
+
+## The general boundary — `sending` parameters
+
+The send-check is **not special to `Thread.start`**. Any API that takes a closure
+onto another thread opts in by declaring a **`sending`** parameter, and every
+argument passed to it gets the same treatment (Sendable captures, owned captures
+moved in). `Thread.start` and `Task.start` themselves are just APIs that declare
+`sending body` — the compiler has no hardcoded knowledge of them.
+
+```dlang
+// a user-defined thread API — 'work' gets the send-check at every call site
+runAsync :: (sending work: () -> int) -> Task(int) {
+  return spawn work()
+}
+```
+
+`sending` transfers ownership like `sink` (passed by value, consumed at the call);
+it only adds the thread-crossing check.
+
+## Shared mutable state — `Mutex(T)`
+
+MVS makes casual shared mutable state impossible, so `Mutex(T)` is the *one*
+sanctioned place it lives. It is an atomically reference-counted owning handle
+over a lock-protected `T`. `clone()` makes another handle to the **same** guarded
+value; move a clone into each worker; the last handle to drop frees everything.
+
+```dlang
+inline import("std/concurrency/task")     // bare Task for `spawn`
+val mutex = import("std/concurrency/mutex")
+
+bump :: (sink m: mutex.Mutex(int), n: int) -> int {
+  var i: int = 0
+  while (i < n) { m.update((x: int) -> int = x + 1)  i = i + 1 }
+  return n              // spawn needs a value-producing body
+}
+
+shared :: () -> int {
+  val counter: mutex.Mutex(int) = mutex.Mutex(int).of(0)
+  val c1: mutex.Mutex(int) = counter.clone()      // a second handle
+  val t: Task(int) = spawn bump(c1, 1000)         // c1 moved into the worker
+  val here: int = bump(counter.clone(), 1000)
+  await t
+  return counter.get()                            // 2000
+}
+```
+
+`update(f)` locks, replaces the value with `f(value)`, and unlocks — the lock is
+the exclusivity token, so the Law of Exclusivity extends *across* threads through
+it. `get()` reads a copy under the lock.
+
+## Lock-free counters — `Atomic`
+
+`Atomic` is an owning handle over a heap 4-byte cell driven by the hardware's
+sequentially-consistent atomic instructions. It is the refcount primitive under
+`Shared`/`Mutex`/`Channel`, and a standalone counter in its own right.
+
+```dlang
+val atom = import("std/concurrency/atomic")
+
+var a: atom.Atomic = atom.Atomic.of(0)
+val old: int = a.fetchAdd(1)     // returns the value BEFORE the add
+val now: int = a.subFetch(1)     // returns the value AFTER the subtract
+println(a.load())
+```
+
+The compiler auto-links `libatomic` whenever a program uses these operations — no
+flag required.
+
+## Reference-counted sharing — `Shared(T)`
+
+`Shared(T)` is an **Arc**: an atomically reference-counted handle for sharing an
+immutable value across threads. `clone()` is a lock-free refcount bump; the last
+drop frees.
+
+```dlang
+inline import("std/concurrency/task")     // bare Task for `spawn`
+val shared = import("std/concurrency/shared")
+
+val cfg: shared.Shared(int) = shared.Shared(int).of(42)
+val c1: shared.Shared(int) = cfg.clone()
+val t: Task(int) = spawn readConfig(c1)   // c1 moved into the worker
+println(cfg.get())                         // 42
+await t
+```
+
+Use `Shared` for shared *immutable* state; use `Mutex` when the shared value must
+be mutated.
+
+## Importing the concurrency modules
+
+Two rules cover every case:
+
+- **`spawn` needs `task` inline** — `inline import("std/concurrency/task")`. The
+  `spawn` keyword expands to `Task(T).start(…)`, which names `Task` bare, so the
+  `task` module must be inline-imported (this also gives you `Thread`).
+- **Import everything else by binding prefix** —
+  `val ch = import("std/concurrency/channel")`, `val mutex = import(…)`, etc.
+  Those modules share internal `thread`/`atomic` dependencies that would collide
+  in the flat namespace under `inline import`.
+
+```dlang
+inline import("std/concurrency/task")        // Task, spawn/await, Thread
+val mutex   = import("std/concurrency/mutex")
+val channel = import("std/concurrency/channel")
+```
 
 ## Related
 
-- [Coroutines and Promises](42-coroutines-and-promises.md)
-- [Async/Await Programming](43-async-await.md)
+- [Structured Concurrency — Tasks and Futures](42-coroutines-and-promises.md)
+- [spawn / await](43-async-await.md)
 - [Channels and Message Passing](44-channels.md)
-- [Manual Memory Management](13-manual-memory.md)
+- [Memory Safety](14a-memory-safety.md)
 
 [← Index](README.md)

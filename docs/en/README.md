@@ -94,8 +94,8 @@ header to switch to Português.)_
 
 ### Concurrency
 41. [Multithreading and Concurrency](41-concurrency.md)
-42. [Coroutines and Promises](42-coroutines-and-promises.md)
-43. [Async/Await Programming](43-async-await.md)
+42. [Structured Concurrency — Tasks and Futures](42-coroutines-and-promises.md)
+43. [spawn / await](43-async-await.md)
 44. [Channels and Message Passing](44-channels.md)
 
 ### Metaprogramming
