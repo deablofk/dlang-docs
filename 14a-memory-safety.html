@@ -1,0 +1,2266 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A data-oriented systems programming language (working name)">
+      
+      
+      
+        <link rel="canonical" href="https://deablofk.github.io/dlang-docs/14a-memory-safety.html">
+      
+      
+        <link rel="prev" href="14-garbage-collection.html">
+      
+      
+        <link rel="next" href="15-error-handling.html">
+      
+      
+        
+          <link rel="alternate" href="14a-memory-safety.html" hreflang="en">
+        
+          <link rel="alternate" href="pt/14a-memory-safety.html" hreflang="pt">
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Memory Safety - DLang Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="stylesheets/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#memory-safety" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="DLang Documentation" class="md-header__button md-logo" aria-label="DLang Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DLang Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Memory Safety
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="14a-memory-safety.html" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="pt/14a-memory-safety.html" hreflang="pt" class="md-select__link">
+              Português
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="DLang Documentation" class="md-nav__button md-logo" aria-label="DLang Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DLang Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DLang Documentation (English)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="01-primitive-types.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Primitive Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="02-text-literals.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Text Literals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="03-arithmetic-operators.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arithmetic Operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="04-variables-and-scope.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables and Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="05-conditionals.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditionals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="06-loops.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loops and Iteration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="07-arrays-and-lists.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arrays and Native Lists
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="08-maps-and-dictionaries.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps and Dictionaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="09-functions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions and Procedures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="10-parameter-passing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameter Passing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="11-multiple-returns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multiple Return Values
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="12-pointers-and-references.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pointers and References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="13-manual-memory.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual Memory — the Builtin Floor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="14-garbage-collection.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Garbage Collection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Safety
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="14a-memory-safety.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-vocabulary-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The vocabulary, at a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#values-are-the-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Values are the default
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#owned-resources-nocopy-affine-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Owned resources — nocopy (affine) types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Owned resources — nocopy (affine) types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-destruction-asap-deinit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic destruction — ASAP deinit
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-conventions-borrow-inout-sink-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter conventions — borrow, inout, sink, set
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#projections-yields-auto-deref-and-inout-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projections — yields, auto-deref, and inout bindings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#graphs-and-shared-identity-poolt-handle-or-indices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Graphs and shared identity — Pool(T) + Handle, or indices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-boundary-law-no-raw-memory-outside-the-floor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The boundary law — no raw memory outside the floor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strings-and-asap-reclamation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings and ASAP reclamation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The error codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#techniques-and-prior-art" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Techniques and prior art
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-guarantees-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The guarantees, at a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="15-error-handling.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="16-enumerations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Enumerations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="17-structs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Data Structures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="18-dynamic-allocation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic Allocation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="19-modules-and-namespaces.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules and Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="20-classes-and-objects.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classes and Objects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="21-constructors-and-destructors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constructors and Destructors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="22-encapsulation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Encapsulation and Access Modifiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="23-single-inheritance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Single Inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="24-multiple-inheritance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multiple Inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="25-interfaces.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces and Abstract Classes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="26-polymorphism.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Polymorphism
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="27-operator-overloading.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator Overloading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="28-virtual-methods.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="29-static-typing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Static Typing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="30-dynamic-typing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic Typing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="31-type-inference.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Type Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="32-generics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generics and Parametric Programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="33-function-pointers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Function Pointers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="34-closures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Closures and Anonymous Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="35-higher-order-functions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Higher-Order Functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="36-lazy-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lazy Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="37-pattern-matching.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pattern Matching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="38-tuples-and-destructuring.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tuples and Destructuring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="39-lambda-expressions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lambda Expressions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="40-list-comprehension.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List Comprehension
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="41-concurrency.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multithreading and Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="42-coroutines-and-promises.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Structured Concurrency — Tasks and Futures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="43-async-await.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    spawn / await
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="44-channels.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Channels and Message Passing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="45-metaprogramming-and-reflection.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metaprogramming and Reflection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="46-macros.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macros and Code Expansion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="47-runtime-compilation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Compilation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="48-dependent-types.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependent Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="49-theorem-proving.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compile-Time Theorem Proving
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="50-c-interop.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    C Interoperability (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="51-formatting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Formatting (dfmt)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="memory-safety">Memory Safety<a class="headerlink" href="#memory-safety" title="Permanent link">&para;</a></h1>
+<p>DLang is memory-safe by construction. The model is <strong>pure Mutable Value Semantics (MVS)</strong> — the discipline pioneered by <strong>Hylo</strong> — with DLang's own keywords: every piece of data is a <em>value</em> with exactly one owner, mutation happens through the owner (never through an alias), and the compiler destroys each owner automatically at its last use. Use-after-free, double-free, use-after-move, dangling references, and aliased mutation are <strong>compile-time errors</strong>, rejected at <strong>zero runtime cost</strong>. There is no garbage collector, no reference counting, and no borrow-lifetime annotations.</p>
+<p>This is not opt-in and there is no flag: the checks run on <strong>every build</strong>. Raw pointers still exist, but only on the <em>Builtin floor</em> — inside the audited implementations of owning types — never in application code (see <a href="#the-boundary-law-no-raw-memory-outside-the-floor">the boundary law</a>).</p>
+<h2 id="the-vocabulary-at-a-glance">The vocabulary, at a glance<a class="headerlink" href="#the-vocabulary-at-a-glance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword / form</th>
+<th>Where</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nocopy</code></td>
+<td>before <code>struct</code></td>
+<td>the type is <strong>affine</strong>: moved, not copied; exactly one owner</td>
+</tr>
+<tr>
+<td><code>deinit</code></td>
+<td>method name</td>
+<td>destructor; the compiler calls it <strong>automatically at the value's last use</strong></td>
+</tr>
+<tr>
+<td><code>nodrop</code></td>
+<td>before <code>struct</code></td>
+<td>reserved: asserts a <code>deinit</code> that only releases memory (currently inert)</td>
+</tr>
+<tr>
+<td><code>borrow</code></td>
+<td>before a parameter (the default)</td>
+<td>read-only access; caller keeps ownership</td>
+</tr>
+<tr>
+<td><code>inout</code></td>
+<td>before a parameter</td>
+<td>exclusive mutable access with <strong>write-back</strong> — the caller sees the mutation</td>
+</tr>
+<tr>
+<td><code>sink</code></td>
+<td>before a parameter</td>
+<td>ownership transfers into the callee</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td>before a parameter</td>
+<td>an <strong>out-slot</strong>: starts uninitialized, the callee must assign it on every path</td>
+</tr>
+<tr>
+<td><code>yields</code></td>
+<td>in an accessor signature</td>
+<td>declares a <strong>projection</strong> accessor (in-place access to an element)</td>
+</tr>
+<tr>
+<td><code>yield e</code></td>
+<td>inside a <code>yields</code> body</td>
+<td>the expression the projection exposes</td>
+</tr>
+<tr>
+<td><code>inout e = xs.at(i)</code></td>
+<td>statement</td>
+<td>binds a projection for a run of statements; the owner is locked while it lives</td>
+</tr>
+<tr>
+<td><code>.copy()</code></td>
+<td>method call</td>
+<td>explicit deep copy of an affine value — the only way to duplicate one</td>
+</tr>
+</tbody>
+</table>
+<h2 id="values-are-the-default">Values are the default<a class="headerlink" href="#values-are-the-default" title="Permanent link">&para;</a></h2>
+<p>A plain <code>struct</code> is a value. Assigning or passing it copies it, and a copy is independent — there is no aliasing to reason about and no pointer to dangle. Implicit copying is allowed <strong>only for data that needs no cleanup</strong>; anything with a destructor is move-only by rule (below).</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">Point</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w">  </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">val</span><span class="w"> </span><span class="n">p</span><span class="p">:</span><span class="w"> </span><span class="n">Point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Point</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">val</span><span class="w"> </span><span class="n">q</span><span class="p">:</span><span class="w"> </span><span class="n">Point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="w">          </span><span class="c1">// an independent copy — mutating q never affects p</span>
+</span></code></pre></div>
+<h2 id="owned-resources-nocopy-affine-types">Owned resources — <code>nocopy</code> (affine) types<a class="headerlink" href="#owned-resources-nocopy-affine-types" title="Permanent link">&para;</a></h2>
+<p>A resource that must be released exactly once — a socket, a file, a growable buffer — is a <strong><code>nocopy</code></strong> struct. A <code>nocopy</code> value is <em>affine</em>: it is <strong>moved, not copied</strong>. Assignment transfers ownership, and using the old binding afterward is a compile error — the same defect as a use-after-free, caught before the program runs.</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">Socket</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">nocopy</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">Socket</span><span class="p">.</span><span class="n">deinit</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* close the fd */</span><span class="w"> </span><span class="p">}</span><span class="w">     </span><span class="c1">// destructor — runs automatically</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">shutdown</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">sink</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1">// `sink` = takes ownership</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">main</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="n">shutdown</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">                </span><span class="c1">// ownership consumed here</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">leaked</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fd</span><span class="w">     </span><span class="c1">// ERROR[E_USE_AFTER_MOVE]</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="n">shutdown</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">                </span><span class="c1">// ERROR[E_USE_AFTER_MOVE]  (a double free, statically)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">leaked</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>The standard containers are themselves <code>nocopy</code> owners: <strong><code>List(T)</code>, <code>Map(K, V)</code>, <code>ByteBuf</code>, <code>Pool(T)</code></strong> all own their heap storage this way. That means <code>val ys = xs</code> on a <code>List</code> is a <strong>move</strong> — the honest cost model. To hand the same contents to two owners, ask for it explicitly with <code>xs.copy()</code>.</p>
+<p>Affinity is <strong>contagious</strong>: a struct containing a <code>nocopy</code> field is itself <code>nocopy</code>, so an owned value cannot be smuggled out through a copyable wrapper.</p>
+<h3 id="automatic-destruction-asap-deinit">Automatic destruction — ASAP <code>deinit</code><a class="headerlink" href="#automatic-destruction-asap-deinit" title="Permanent link">&para;</a></h3>
+<p>A <code>nocopy</code> type may define <code>deinit</code>. The compiler inserts the call <strong>at the value's static last use</strong> — as soon as possible, not at scope end — with no drop flags and no runtime bookkeeping, exactly once on <strong>every</strong> path (fall-through, early <code>return</code>, <code>break</code>, <code>continue</code>). This is Mojo-style ASAP destruction: you never write a free, and you cannot forget one.</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">Socket</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">nocopy</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">Socket</span><span class="p">.</span><span class="n">deinit</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">println</span><span class="p">(</span><span class="s">&quot;socket closed&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">peek</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fd</span><span class="w">     </span><span class="c1">// borrow — does NOT consume</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">main</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">peek</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">      </span><span class="c1">// borrow — still owned</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">peek</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">      </span><span class="c1">// borrow again — fine</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="w">              </span><span class="c1">// &quot;socket closed&quot; printed after the last use of s</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>string</code> values are managed the same way (the compiler frees dead intermediates of <code>+</code>/interpolation on the spot — see the note on strings below), and a <code>List</code>'s <code>deinit</code> recursively drops every element before releasing the buffer.</p>
+<h2 id="parameter-conventions-borrow-inout-sink-set">Parameter conventions — <code>borrow</code>, <code>inout</code>, <code>sink</code>, <code>set</code><a class="headerlink" href="#parameter-conventions-borrow-inout-sink-set" title="Permanent link">&para;</a></h2>
+<p>A convention on a parameter states what the callee does with the argument. This is the whole "reference" story in DLang: references exist only <em>at call boundaries</em>, are created implicitly (no <code>&amp;</code> at the call site), and cannot escape the call.</p>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Callee's access</th>
+<th>Ownership</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>borrow</code> (default)</td>
+<td>read-only</td>
+<td>caller keeps it</td>
+</tr>
+<tr>
+<td><code>inout</code></td>
+<td>exclusive read-write, <strong>written back</strong></td>
+<td>caller keeps it, sees the mutation</td>
+</tr>
+<tr>
+<td><code>sink</code></td>
+<td>full</td>
+<td>transfers to the callee</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td>write-first (starts <strong>uninitialized</strong>)</td>
+<td>caller keeps the initialized result</td>
+</tr>
+</tbody>
+</table>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">peek</span><span class="w">    </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fd</span><span class="w">          </span><span class="c1">// borrow: call repeatedly</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">rename</span><span class="w">  </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">inout</span><span class="w"> </span><span class="n">p</span><span class="p">:</span><span class="w"> </span><span class="n">Pessoa</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">nome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// caller&#39;s p changes</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">consume</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">sink</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1">// s dies here (its deinit runs in the callee)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">firstTwo</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">xs</span><span class="p">:</span><span class="w"> </span><span class="kt">List</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span><span class="w"> </span><span class="k">set</span><span class="w"> </span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="k">set</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">    </span><span class="c1">// out-slots</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xs</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xs</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w">                               </span><span class="c1">// every path MUST assign a and b</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1">// caller: `var a: int` (uninitialized is fine) then firstTwo(xs, a, b)</span>
+</span></code></pre></div>
+<p>The rules that keep this sound:</p>
+<ul>
+<li><strong>A plain (borrow) parameter is immutable.</strong> Assigning to it or through it is <code>E_IMMUTABLE</code>. If you want the caller to see a change, say so: <code>inout</code>.</li>
+<li><strong><code>inout</code> is real write-back.</strong> The argument must be a mutable lvalue rooted at a <code>var</code>; the caller's value is updated when the call returns. This matters for affine values especially: passing a <code>nocopy</code> struct as a plain parameter gives the callee a <em>read-only view</em>, not a mutable alias.</li>
+<li><strong>A borrow may not escape.</strong> Returning, storing, or <code>sink</code>-ing a borrowed parameter is <code>E_REF_ESCAPES</code> — a borrow never outlives its call.</li>
+<li><strong>Law of Exclusivity.</strong> Two <code>inout</code> arguments may not alias the same storage (<code>E_EXCLUSIVITY</code>); a mutable borrow is always exclusive.</li>
+<li><strong><code>set</code> is checked by definite assignment.</strong> The callee must assign the slot on every path (<code>E_SET_UNASSIGNED</code>) and may not read it before the first assignment (<code>E_SET_BEFORE_ASSIGN</code>). <code>set</code> is the PVS replacement for "construct the result where it has to live" — out-construction in place, with no pointer.</li>
+</ul>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">bump2</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">inout</span><span class="w"> </span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="k">inout</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">main</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="n">bump2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w">     </span><span class="c1">// ERROR[E_EXCLUSIVITY]: &#39;x&#39; aliased by two inout arguments</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">x</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="projections-yields-auto-deref-and-inout-bindings">Projections — <code>yields</code>, auto-deref, and <code>inout</code> bindings<a class="headerlink" href="#projections-yields-auto-deref-and-inout-bindings" title="Permanent link">&para;</a></h2>
+<p>Move-only containers need a way to touch <em>one element in place</em> without copying it out or moving it. That is a <strong>projection</strong>: a second-class, receiver-rooted reference produced by a <code>yields</code> accessor. <code>List(T).at</code> is the model:</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">xs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">).</span><span class="n">hp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">99</span><span class="w">                 </span><span class="c1">// auto-deref: mutate a field of element i in place</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">xs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">).</span><span class="n">inventory</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;potion&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// nested owners mutate in place too</span>
+</span></code></pre></div>
+<p>To keep a projection across several statements, bind it with <code>inout</code>:</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">inout</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w">     </span><span class="c1">// e projects element i</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">e</span><span class="p">.</span><span class="n">hp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">hp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">10</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">e</span><span class="p">.</span><span class="n">shield</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// while e is live, xs is LOCKED: using xs here is E_EXCLUSIVITY</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1">// (a grow could reallocate the buffer and dangle the projection)</span>
+</span></code></pre></div>
+<p>Any other retention of a projection — a <code>val</code>/<code>var</code> binding, storing it in a field, returning it, passing it to an ordinary function — is <code>E_REF_ESCAPES</code>, on every build. To <em>keep</em> an element, move it out with <code>xs.removeAt(i)</code>.</p>
+<p>You can declare projections on your own owners:</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">Cell</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">v</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">Board</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">nocopy</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cells</span><span class="p">:</span><span class="w"> </span><span class="kt">List</span><span class="p">(</span><span class="n">Cell</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">Board</span><span class="p">.</span><span class="n">cell</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">yields</span><span class="w"> </span><span class="n">Cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">_</span><span class="p">.</span><span class="n">cells</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">).</span><span class="n">value</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// (forwarding an inner projection derefs it with .value; block bodies use `yield e`)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">board</span><span class="p">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">).</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">        </span><span class="c1">// member access auto-derefs, same as List.at</span>
+</span></code></pre></div>
+<p>A projection of a <em>scalar</em> (<code>yields int</code>) is written through <code>.value</code> — <code>score.cell(i).value = 9</code> — since there is no member to auto-deref. Inside a <code>yields</code> body the compiler permits the receiver-rooted <code>ref</code> it needs; callers never see a pointer.</p>
+<h2 id="graphs-and-shared-identity-poolt-handle-or-indices">Graphs and shared identity — <code>Pool(T)</code> + <code>Handle</code>, or indices<a class="headerlink" href="#graphs-and-shared-identity-poolt-handle-or-indices" title="Permanent link">&para;</a></h2>
+<p>Single ownership expresses trees. For <strong>cycles, back-references, and ECS-shaped lifetimes</strong> (entities that refer to each other and die independently), DLang's answer is <em>indices instead of pointers</em>:</p>
+<ul>
+<li><strong><code>Pool(T)</code> + <code>Handle</code></strong> (<code>import("std/collections/pool")</code>): a slot store with <strong>generational handles</strong>. <code>Handle { slot, gen }</code> is a plain copyable value — store it in fields, lists, other entities; cycles are free. Killing an entity bumps its slot's generation, so every stale copy of its handle becomes <em>detectably dead</em> (<code>alive(h) == false</code>) instead of dangling:</li>
+</ul>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">inline</span><span class="w"> </span><span class="k">import</span><span class="p">(</span><span class="s">&quot;std/collections/pool&quot;</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">var</span><span class="w"> </span><span class="n">mobs</span><span class="p">:</span><span class="w"> </span><span class="kt">Pool</span><span class="p">(</span><span class="n">Mob</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Pool</span><span class="p">(</span><span class="n">Mob</span><span class="p">).</span><span class="n">empty</span><span class="p">()</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">val</span><span class="w"> </span><span class="n">h</span><span class="p">:</span><span class="w"> </span><span class="n">Handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mobs</span><span class="p">.</span><span class="k">spawn</span><span class="p">(</span><span class="n">Mob</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">hp</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">target</span><span class="p">:</span><span class="w"> </span><span class="n">Handle</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">slot</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gen</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mobs</span><span class="p">.</span><span class="n">alive</span><span class="p">(</span><span class="n">h</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="n">mobs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">h</span><span class="p">).</span><span class="n">hp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span><span class="w">        </span><span class="c1">// .at(h) is a projection, same rules as List.at</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">mobs</span><span class="p">.</span><span class="n">kill</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="w">               </span><span class="c1">// idempotent; the slot is recycled by a later spawn</span>
+</span></code></pre></div>
+<ul>
+<li><strong>The index encoding</strong>: for append-only stores (an AST, an interning table), plain <code>int</code> indices into a <code>List(Node)</code> work directly — an index cannot dangle into a store that never shrinks. This is how the DLang compiler itself represents its syntax trees.</li>
+</ul>
+<p>There are <strong>no region/arena blocks in the language</strong>. The old <code>region { … }</code> / <code>detach</code> tier was removed when the pure-MVS model landed (writing them is <code>E_NOT_SUPPORTED</code>, with a migration hint): everything a region did is covered by owners that die at last use, <code>Pool</code>/indices for graphs, and <code>set</code> out-parameters for building results in place.</p>
+<h2 id="the-boundary-law-no-raw-memory-outside-the-floor">The boundary law — no raw memory outside the floor<a class="headerlink" href="#the-boundary-law-no-raw-memory-outside-the-floor" title="Permanent link">&para;</a></h2>
+<p><code>Ptr(T)</code>, <code>New</code>, <code>Undo</code>, <code>ref</code>, and <code>_alloc.*</code> still exist — they are what <code>List</code> and <code>string</code> are <em>built out of</em> — but they are confined to the <strong>Builtin floor</strong>. Raw operations are legal only:</p>
+<ol>
+<li>inside the methods of a <code>nocopy</code> + <code>deinit</code> <strong>owning handle</strong> (the raw implementation surface of <code>List</code>, <code>Map</code>, <code>ByteBuf</code>, your own resource wrappers),</li>
+<li>in <strong>extern C signatures</strong> (FFI declarations with no body),</li>
+<li>in <code>string</code>'s own implementation,</li>
+<li>in <code>yields</code> accessor bodies (the receiver-rooted <code>ref</code>),</li>
+<li>in the fixed runtime hooks.</li>
+</ol>
+<p>Anywhere else — a signature, a struct field, a local, an allocation in ordinary code — is <strong><code>E_RAW_OUTSIDE_BUILTIN</code></strong>, on every build, with <strong>no module allowlist</strong>: the standard library obeys the same law, and the compiler is migrating its own sources to it. <code>--raw-floor</code> disables the law only for below-the-model code (the compiler's bootstrap and the allocator-introspecting proof harnesses); it is not for applications.</p>
+<p>FFI buffers cross API boundaries as opaque <code>long</code> addresses (<code>ByteBuf.addr(i)</code>, <code>cast(long, s.cstr())</code>), and a C-owned resource is wrapped in an owning handle whose <code>deinit</code> releases it exactly once. See <a href="13-manual-memory.html">Manual Memory</a> for the floor in full.</p>
+<h2 id="strings-and-asap-reclamation">Strings and ASAP reclamation<a class="headerlink" href="#strings-and-asap-reclamation" title="Permanent link">&para;</a></h2>
+<p><code>string</code> is a value with compiler-managed ownership: interpolation and <code>+</code> temporaries, <code>println</code> arguments, and accumulation locals (<code>var s</code> … <code>s = s + piece</code> in a loop) are freed <strong>on the spot</strong> by compiler-inserted drops. The accumulation idiom is therefore the <em>preferred</em> way to build strings — it no longer leaks. (It is still O(n²) copying for very large outputs; divide-and-conquer join those.)</p>
+<h2 id="the-error-codes">The error codes<a class="headerlink" href="#the-error-codes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Rejected program shape</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>E_USE_AFTER_MOVE</code></td>
+<td>using / re-consuming an affine value after it was moved</td>
+</tr>
+<tr>
+<td><code>E_IMMUTABLE</code></td>
+<td>writing through a plain (borrow) parameter</td>
+</tr>
+<tr>
+<td><code>E_EXCLUSIVITY</code></td>
+<td>aliased <code>inout</code> arguments; touching an owner while its projection is live</td>
+</tr>
+<tr>
+<td><code>E_REF_ESCAPES</code></td>
+<td>a borrow or projection escaping its call / statement scope</td>
+</tr>
+<tr>
+<td><code>E_SET_UNASSIGNED</code> / <code>E_SET_BEFORE_ASSIGN</code></td>
+<td>a <code>set</code> out-slot not assigned on every path / read too early</td>
+</tr>
+<tr>
+<td><code>E_RAW_OUTSIDE_BUILTIN</code></td>
+<td>any raw-memory vocabulary outside the sanctioned floor</td>
+</tr>
+<tr>
+<td><code>E_NOT_SUPPORTED</code></td>
+<td>the removed <code>region</code> / <code>detach</code> tier</td>
+</tr>
+</tbody>
+</table>
+<h2 id="techniques-and-prior-art">Techniques and prior art<a class="headerlink" href="#techniques-and-prior-art" title="Permanent link">&para;</a></h2>
+<p>The model is a synthesis of established techniques — DLang's contribution is committing to the <em>pure</em> combination, with no unsafe user-facing tier left over:</p>
+<ul>
+<li><strong>Mutable Value Semantics</strong> — values with single ownership, mutation only through the owner, no first-class references: <strong>Hylo</strong> (formerly Val). DLang is a Hylo-purist implementation with its own keyword surface.</li>
+<li><strong>Parameter-passing conventions</strong> (<code>borrow</code> / <code>inout</code> / <code>sink</code> / <code>set</code>) and <strong>second-class references</strong> — also from <strong>Hylo</strong>, mirrored by <strong>Swift</strong>'s <code>borrowing</code>/<code>consuming</code>; <code>set</code> is Hylo's out-initialization convention.</li>
+<li><strong>Law of Exclusivity</strong> — exclusive mutable access, from <strong>Swift</strong> (SE-0176).</li>
+<li><strong>Projections</strong> — subscript-style <code>yields</code> accessors are Hylo's (and Swift's) accessor coroutines; the compile-time root-lock replaces runtime exclusivity checks.</li>
+<li><strong>Affine types / move semantics</strong> — <code>nocopy</code> is the ownership discipline of <strong>Rust</strong>, the linear types of <strong>Austral</strong>, the abilities of <strong>Move</strong>.</li>
+<li><strong>ASAP destruction with no drop flags</strong> — from <strong>Mojo</strong>'s ASAP destruction and the reuse analysis of <strong>Perceus</strong> (Koka).</li>
+<li><strong>Generational indices</strong> — <code>Pool(T)</code> + <code>Handle</code> is the ECS idiom Hylo and the Rust game-dev community converged on: dynamic staleness instead of lexical lifetimes.</li>
+</ul>
+<p>An earlier iteration of the model also had Tofte–Talpin-style lexical regions for pointer graphs; they were <strong>deleted</strong> when projections, <code>set</code>, and <code>Pool</code> proved sufficient — a lexical raw zone was the one place the safety claim stayed conditional, and Hylo demonstrates the model stands without it.</p>
+<h2 id="the-guarantees-at-a-glance">The guarantees, at a glance<a class="headerlink" href="#the-guarantees-at-a-glance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Bug</th>
+<th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>use-after-free / double-free</td>
+<td><strong>compile error</strong> (<code>E_USE_AFTER_MOVE</code>)</td>
+</tr>
+<tr>
+<td>dangling reference</td>
+<td>unrepresentable — references never escape a call</td>
+</tr>
+<tr>
+<td>aliased mutation</td>
+<td><strong>compile error</strong> (<code>E_EXCLUSIVITY</code>)</td>
+</tr>
+<tr>
+<td>projection dangling across a grow</td>
+<td><strong>compile error</strong> (root lock / <code>E_REF_ESCAPES</code>)</td>
+</tr>
+<tr>
+<td>stale entity handle</td>
+<td><strong>detectable</strong> (<code>pool.alive(h) == false</code>), never a dangle</td>
+</tr>
+<tr>
+<td>raw pointer in application code</td>
+<td><strong>compile error</strong> (<code>E_RAW_OUTSIDE_BUILTIN</code>)</td>
+</tr>
+<tr>
+<td>forgotten cleanup</td>
+<td>impossible — <code>deinit</code> is automatic, exactly once, ASAP</td>
+</tr>
+<tr>
+<td>runtime cost of all of the above</td>
+<td><strong>zero</strong> — entirely static</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="13-manual-memory.html">Manual Memory — the Builtin floor</a></li>
+<li><a href="14-garbage-collection.html">Garbage Collection (why there is none)</a></li>
+<li><a href="18-dynamic-allocation.html">Dynamic Allocation — owning values</a></li>
+<li><a href="12-pointers-and-references.html">Pointers and References</a></li>
+<li><a href="10-parameter-passing.html">Parameter Passing</a></li>
+<li><a href="21-constructors-and-destructors.html">Constructors and Destructors</a></li>
+</ul>
+<p><a href="index.html">← Index</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.top", "navigation.indexes", "toc.integrate", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

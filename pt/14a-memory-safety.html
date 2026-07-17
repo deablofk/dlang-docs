@@ -1,0 +1,2266 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A data-oriented systems programming language (working name)">
+      
+      
+      
+        <link rel="canonical" href="https://deablofk.github.io/dlang-docs/pt/14a-memory-safety.html">
+      
+      
+        <link rel="prev" href="14-garbage-collection.html">
+      
+      
+        <link rel="next" href="15-error-handling.html">
+      
+      
+        
+          <link rel="alternate" href="../14a-memory-safety.html" hreflang="en">
+        
+          <link rel="alternate" href="14a-memory-safety.html" hreflang="pt">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Segurança de Memória - DLang Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#seguranca-de-memoria" class="md-skip">
+          Ir para o conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="index.html" title="DLang Documentation" class="md-header__button md-logo" aria-label="DLang Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DLang Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Segurança de Memória
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Selecione o idioma">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../14a-memory-safety.html" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="14a-memory-safety.html" hreflang="pt" class="md-select__link">
+              Português
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando a pesquisa
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="DLang Documentation" class="md-nav__button md-logo" aria-label="DLang Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    DLang Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentação da DLang (Português)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="01-primitive-types.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tipos Primitivos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="02-text-literals.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Literais de Texto
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="03-arithmetic-operators.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operadores Aritméticos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="04-variables-and-scope.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variáveis e Escopo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="05-conditionals.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estruturas Condicionais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="06-loops.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loops e Iterações
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="07-arrays-and-lists.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arrays e Listas Nativas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="08-maps-and-dictionaries.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tabelas e Dicionários
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="09-functions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funções e Procedimentos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="10-parameter-passing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Passagem de Parâmetros
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="11-multiple-returns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retorno de Múltiplos Valores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="12-pointers-and-references.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ponteiros e Referências
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="13-manual-memory.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memória Manual — o Piso Builtin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="14-garbage-collection.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Coleta de Lixo Automática
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança de Memória
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="14a-memory-safety.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança de Memória
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#o-vocabulario-de-relance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O vocabulário, de relance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#valores-sao-o-padrao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Valores são o padrão
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recursos-com-dono-tipos-nocopy-afins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursos com dono — tipos nocopy (afins)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recursos com dono — tipos nocopy (afins)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#destruicao-automatica-deinit-asap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Destruição automática — deinit ASAP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convencoes-de-parametro-borrow-inout-sink-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Convenções de parâmetro — borrow, inout, sink, set
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#projecoes-yields-auto-deref-e-bindings-inout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projeções — yields, auto-deref e bindings inout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#grafos-e-identidade-compartilhada-poolt-handle-ou-indices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grafos e identidade compartilhada — Pool(T) + Handle, ou índices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-lei-de-fronteira-nada-de-memoria-crua-fora-do-piso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A lei de fronteira — nada de memória crua fora do piso
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strings-e-recuperacao-asap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings e recuperação ASAP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#os-codigos-de-erro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Os códigos de erro
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tecnicas-e-trabalhos-anteriores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Técnicas e trabalhos anteriores
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-garantias-de-relance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        As garantias, de relance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relacionados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relacionados
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="15-error-handling.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tratamento de Erros
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="16-enumerations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Enumerações
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="17-structs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estruturas de Dados Personalizadas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="18-dynamic-allocation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alocação Dinâmica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="19-modules-and-namespaces.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Módulos e Namespaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="20-classes-and-objects.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classes e Objetos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="21-constructors-and-destructors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Construtores e Destrutores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="22-encapsulation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Encapsulamento e Modificadores de Acesso
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="23-single-inheritance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Herança Simples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="24-multiple-inheritance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Herança Múltipla
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="25-interfaces.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces e Classes Abstratas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="26-polymorphism.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Polimorfismo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="27-operator-overloading.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sobrecarga de Operadores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="28-virtual-methods.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Métodos Virtuais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="29-static-typing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tipagem Estática
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="30-dynamic-typing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tipagem Dinâmica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="31-type-inference.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inferência de Tipos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="32-generics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generics e Programação Paramétrica
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="33-function-pointers.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ponteiros de Função
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="34-closures.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Closures e Funções Anônimas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="35-higher-order-functions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funções de Ordem Superior
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="36-lazy-evaluation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Avaliação Preguiçosa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="37-pattern-matching.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Casamento de Padrões
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="38-tuples-and-destructuring.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tuplas e Desestruturação
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="39-lambda-expressions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expressões Lambda
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="40-list-comprehension.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compreensão de Listas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="41-concurrency.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multithreading e Concorrência
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="42-coroutines-and-promises.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concorrência Estruturada — Tasks e Futures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="43-async-await.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    spawn / await
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="44-channels.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canais e Passagem de Mensagens
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="45-metaprogramming-and-reflection.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metaprogramação e Reflexão
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="46-macros.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macros e Expansão de Código
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="47-runtime-compilation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compilação em Tempo de Execução
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="48-dependent-types.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sistema de Tipos Dependentes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="49-theorem-proving.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prova de Teoremas em Tempo de Compilação
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="50-c-interop.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interoperabilidade com C (FFI)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="51-formatting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatação de Código (dfmt)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="seguranca-de-memoria">Segurança de Memória<a class="headerlink" href="#seguranca-de-memoria" title="Permanent link">&para;</a></h1>
+<p>DLang é seguro em memória por construção. O modelo é <strong>Mutable Value Semantics (MVS) puro</strong> — a disciplina pioneirada pelo <strong>Hylo</strong> — com as palavras-chave próprias da DLang: todo dado é um <em>valor</em> com exatamente um dono, mutação acontece através do dono (nunca através de um alias), e o compilador destrói cada dono automaticamente no seu último uso. Use-after-free, liberação dupla, uso-após-move, referências pendentes e mutação com alias são <strong>erros de compilação</strong>, rejeitados com <strong>custo zero em runtime</strong>. Não há coletor de lixo, não há contagem de referências e não há anotações de lifetime.</p>
+<p>Isso não é opcional e não há flag: as verificações rodam em <strong>todo build</strong>. Ponteiros crus ainda existem, mas apenas no <em>piso Builtin</em> — dentro das implementações auditadas dos tipos donos — nunca em código de aplicação (veja <a href="#a-lei-de-fronteira--nada-de-memória-crua-fora-do-piso">a lei de fronteira</a>).</p>
+<h2 id="o-vocabulario-de-relance">O vocabulário, de relance<a class="headerlink" href="#o-vocabulario-de-relance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Palavra-chave / forma</th>
+<th>Onde</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nocopy</code></td>
+<td>antes de <code>struct</code></td>
+<td>o tipo é <strong>afim</strong>: movido, não copiado; exatamente um dono</td>
+</tr>
+<tr>
+<td><code>deinit</code></td>
+<td>nome de método</td>
+<td>destrutor; o compilador o chama <strong>automaticamente no último uso do valor</strong></td>
+</tr>
+<tr>
+<td><code>nodrop</code></td>
+<td>antes de <code>struct</code></td>
+<td>reservado: afirma um <code>deinit</code> que só libera memória (hoje inerte)</td>
+</tr>
+<tr>
+<td><code>borrow</code></td>
+<td>antes de um parâmetro (o padrão)</td>
+<td>acesso só de leitura; o chamador mantém a posse</td>
+</tr>
+<tr>
+<td><code>inout</code></td>
+<td>antes de um parâmetro</td>
+<td>acesso mutável exclusivo com <strong>write-back</strong> — o chamador vê a mutação</td>
+</tr>
+<tr>
+<td><code>sink</code></td>
+<td>antes de um parâmetro</td>
+<td>a posse transfere-se para o chamado</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td>antes de um parâmetro</td>
+<td>um <strong>slot de saída</strong>: começa não inicializado, o chamado deve atribuí-lo em todo caminho</td>
+</tr>
+<tr>
+<td><code>yields</code></td>
+<td>na assinatura de um acessor</td>
+<td>declara um acessor de <strong>projeção</strong> (acesso in-place a um elemento)</td>
+</tr>
+<tr>
+<td><code>yield e</code></td>
+<td>dentro de um corpo <code>yields</code></td>
+<td>a expressão que a projeção expõe</td>
+</tr>
+<tr>
+<td><code>inout e = xs.at(i)</code></td>
+<td>statement</td>
+<td>vincula uma projeção por uma sequência de statements; o dono fica travado enquanto ela vive</td>
+</tr>
+<tr>
+<td><code>.copy()</code></td>
+<td>chamada de método</td>
+<td>cópia profunda explícita de um valor afim — o único jeito de duplicá-lo</td>
+</tr>
+</tbody>
+</table>
+<h2 id="valores-sao-o-padrao">Valores são o padrão<a class="headerlink" href="#valores-sao-o-padrao" title="Permanent link">&para;</a></h2>
+<p>Um <code>struct</code> comum é um valor. Atribuí-lo ou passá-lo o copia, e a cópia é independente — não há aliasing para raciocinar e não há ponteiro para pender. Cópia implícita é permitida <strong>apenas para dados que não precisam de limpeza</strong>; qualquer coisa com destrutor é move-only por regra (abaixo).</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">Point</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w">  </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">val</span><span class="w"> </span><span class="n">p</span><span class="p">:</span><span class="w"> </span><span class="n">Point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Point</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">val</span><span class="w"> </span><span class="n">q</span><span class="p">:</span><span class="w"> </span><span class="n">Point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="w">          </span><span class="c1">// cópia independente — mudar q nunca afeta p</span>
+</span></code></pre></div>
+<h2 id="recursos-com-dono-tipos-nocopy-afins">Recursos com dono — tipos <code>nocopy</code> (afins)<a class="headerlink" href="#recursos-com-dono-tipos-nocopy-afins" title="Permanent link">&para;</a></h2>
+<p>Um recurso que precisa ser liberado exatamente uma vez — um socket, um arquivo, um buffer que cresce — é um struct <strong><code>nocopy</code></strong>. Um valor <code>nocopy</code> é <em>afim</em>: ele é <strong>movido, não copiado</strong>. A atribuição transfere a posse, e usar o binding antigo depois disso é um erro de compilação — o mesmo defeito de um use-after-free, pego antes de o programa rodar.</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">Socket</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">nocopy</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">Socket</span><span class="p">.</span><span class="n">deinit</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* fecha o fd */</span><span class="w"> </span><span class="p">}</span><span class="w">       </span><span class="c1">// destrutor — roda automaticamente</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">shutdown</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">sink</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1">// `sink` = toma posse</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">main</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="n">shutdown</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">                </span><span class="c1">// posse consumida aqui</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">vazou</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fd</span><span class="w">      </span><span class="c1">// ERRO[E_USE_AFTER_MOVE]</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="n">shutdown</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">                </span><span class="c1">// ERRO[E_USE_AFTER_MOVE]  (uma liberação dupla, estaticamente)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">vazou</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Os contêineres padrão são eles mesmos donos <code>nocopy</code>: <strong><code>List(T)</code>, <code>Map(K, V)</code>, <code>ByteBuf</code>, <code>Pool(T)</code></strong> possuem seu armazenamento assim. Ou seja, <code>val ys = xs</code> numa <code>List</code> é um <strong>move</strong> — o modelo de custo honesto. Para entregar o mesmo conteúdo a dois donos, peça explicitamente com <code>xs.copy()</code>.</p>
+<p>A afinidade é <strong>contagiosa</strong>: um struct contendo um campo <code>nocopy</code> é ele próprio <code>nocopy</code> — não dá para contrabandear um valor com dono por dentro de um invólucro copiável.</p>
+<h3 id="destruicao-automatica-deinit-asap">Destruição automática — <code>deinit</code> ASAP<a class="headerlink" href="#destruicao-automatica-deinit-asap" title="Permanent link">&para;</a></h3>
+<p>Um tipo <code>nocopy</code> pode definir <code>deinit</code>. O compilador insere a chamada <strong>no último uso estático do valor</strong> — o mais cedo possível, não no fim do escopo — sem drop flags e sem contabilidade de runtime, exatamente uma vez em <strong>todo</strong> caminho (fall-through, <code>return</code> antecipado, <code>break</code>, <code>continue</code>). É a destruição ASAP no estilo Mojo: você nunca escreve um free, e não tem como esquecer um.</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">Socket</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">nocopy</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">Socket</span><span class="p">.</span><span class="n">deinit</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">println</span><span class="p">(</span><span class="s">&quot;socket fechado&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">peek</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fd</span><span class="w">     </span><span class="c1">// borrow — NÃO consome</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">main</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Socket</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">fd</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">peek</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">      </span><span class="c1">// borrow — ainda com dono</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="k">val</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">peek</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w">      </span><span class="c1">// borrow de novo — ok</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="w">              </span><span class="c1">// &quot;socket fechado&quot; impresso após o último uso de s</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Valores <code>string</code> são gerenciados do mesmo jeito (o compilador libera na hora os intermediários mortos de <code>+</code>/interpolação — veja a nota sobre strings abaixo), e o <code>deinit</code> de uma <code>List</code> derruba recursivamente cada elemento antes de liberar o buffer.</p>
+<h2 id="convencoes-de-parametro-borrow-inout-sink-set">Convenções de parâmetro — <code>borrow</code>, <code>inout</code>, <code>sink</code>, <code>set</code><a class="headerlink" href="#convencoes-de-parametro-borrow-inout-sink-set" title="Permanent link">&para;</a></h2>
+<p>Uma convenção num parâmetro declara o que o chamado faz com o argumento. Essa é toda a história de "referências" em DLang: referências existem apenas <em>em fronteiras de chamada</em>, são criadas implicitamente (sem <code>&amp;</code> no call site) e não podem escapar da chamada.</p>
+<table>
+<thead>
+<tr>
+<th>Convenção</th>
+<th>Acesso do chamado</th>
+<th>Posse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>borrow</code> (padrão)</td>
+<td>só leitura</td>
+<td>o chamador mantém</td>
+</tr>
+<tr>
+<td><code>inout</code></td>
+<td>leitura-escrita exclusiva, <strong>com write-back</strong></td>
+<td>o chamador mantém e vê a mutação</td>
+</tr>
+<tr>
+<td><code>sink</code></td>
+<td>total</td>
+<td>transfere-se ao chamado</td>
+</tr>
+<tr>
+<td><code>set</code></td>
+<td>escreve-primeiro (começa <strong>não inicializado</strong>)</td>
+<td>o chamador fica com o resultado inicializado</td>
+</tr>
+</tbody>
+</table>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">peek</span><span class="w">    </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">fd</span><span class="w">          </span><span class="c1">// borrow: chame quantas vezes quiser</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">rename</span><span class="w">  </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">inout</span><span class="w"> </span><span class="n">p</span><span class="p">:</span><span class="w"> </span><span class="n">Pessoa</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">nome</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// o p do chamador muda</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">consume</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">sink</span><span class="w"> </span><span class="n">s</span><span class="p">:</span><span class="w"> </span><span class="n">Socket</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1">// s morre aqui (o deinit roda no chamado)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">firstTwo</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">xs</span><span class="p">:</span><span class="w"> </span><span class="kt">List</span><span class="p">(</span><span class="kt">int</span><span class="p">),</span><span class="w"> </span><span class="k">set</span><span class="w"> </span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="k">set</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">    </span><span class="c1">// slots de saída</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xs</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xs</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w">                               </span><span class="c1">// todo caminho DEVE atribuir a e b</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1">// chamador: `var a: int` (não inicializado, ok) e então firstTwo(xs, a, b)</span>
+</span></code></pre></div>
+<p>As regras que mantêm isso sadio:</p>
+<ul>
+<li><strong>Um parâmetro simples (borrow) é imutável.</strong> Atribuir a ele ou através dele é <code>E_IMMUTABLE</code>. Se o chamador deve ver a mudança, diga: <code>inout</code>.</li>
+<li><strong><code>inout</code> é write-back de verdade.</strong> O argumento precisa ser um lvalue mutável enraizado num <code>var</code>; o valor do chamador é atualizado quando a chamada retorna. Isso importa especialmente para valores afins: passar um struct <code>nocopy</code> como parâmetro simples dá ao chamado uma <em>visão só de leitura</em>, não um alias mutável.</li>
+<li><strong>Um borrow não escapa.</strong> Retornar, armazenar ou dar <code>sink</code> num parâmetro emprestado é <code>E_REF_ESCAPES</code> — um borrow nunca sobrevive à sua chamada.</li>
+<li><strong>Lei da Exclusividade.</strong> Dois argumentos <code>inout</code> não podem apelidar o mesmo armazenamento (<code>E_EXCLUSIVITY</code>); um empréstimo mutável é sempre exclusivo.</li>
+<li><strong><code>set</code> é verificado por atribuição definitiva.</strong> O chamado deve atribuir o slot em todo caminho (<code>E_SET_UNASSIGNED</code>) e não pode lê-lo antes da primeira atribuição (<code>E_SET_BEFORE_ASSIGN</code>). <code>set</code> é a resposta PVS para "construir o resultado onde ele precisa viver" — construção-para-fora in place, sem ponteiro.</li>
+</ul>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">bump2</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="k">inout</span><span class="w"> </span><span class="n">a</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="k">inout</span><span class="w"> </span><span class="n">b</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">main</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="n">bump2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w">     </span><span class="c1">// ERRO[E_EXCLUSIVITY]: &#39;x&#39; apelidado por dois argumentos inout</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">x</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="projecoes-yields-auto-deref-e-bindings-inout">Projeções — <code>yields</code>, auto-deref e bindings <code>inout</code><a class="headerlink" href="#projecoes-yields-auto-deref-e-bindings-inout" title="Permanent link">&para;</a></h2>
+<p>Contêineres move-only precisam de um jeito de tocar <em>um elemento in place</em> sem copiá-lo para fora nem movê-lo. Isso é uma <strong>projeção</strong>: uma referência de segunda classe, enraizada no receiver, produzida por um acessor <code>yields</code>. <code>List(T).at</code> é o modelo:</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">xs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">).</span><span class="n">hp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">99</span><span class="w">                 </span><span class="c1">// auto-deref: muta um campo do elemento i in place</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">xs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">).</span><span class="n">inventario</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;poção&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// donos aninhados também mutam in place</span>
+</span></code></pre></div>
+<p>Para segurar uma projeção por vários statements, vincule-a com <code>inout</code>:</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">inout</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w">     </span><span class="c1">// e projeta o elemento i</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">e</span><span class="p">.</span><span class="n">hp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">hp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">10</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">e</span><span class="p">.</span><span class="n">escudo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// enquanto e vive, xs fica TRAVADA: usá-la aqui é E_EXCLUSIVITY</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1">// (um crescimento poderia realocar o buffer e pender a projeção)</span>
+</span></code></pre></div>
+<p>Qualquer outra retenção de uma projeção — um binding <code>val</code>/<code>var</code>, guardar num campo, retornar, passar a uma função comum — é <code>E_REF_ESCAPES</code>, em todo build. Para <em>ficar</em> com um elemento, mova-o para fora com <code>xs.removeAt(i)</code>.</p>
+<p>Você declara projeções nos seus próprios donos:</p>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">Cell</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">v</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">Board</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="k">nocopy</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">cells</span><span class="p">:</span><span class="w"> </span><span class="kt">List</span><span class="p">(</span><span class="n">Cell</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">Board</span><span class="p">.</span><span class="n">cell</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">yields</span><span class="w"> </span><span class="n">Cell</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">_</span><span class="p">.</span><span class="n">cells</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x</span><span class="p">).</span><span class="n">value</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// (encaminhar uma projeção interna a dereferencia com .value; corpos em bloco usam `yield e`)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">board</span><span class="p">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">).</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">        </span><span class="c1">// acesso a membro auto-dereferencia, igual a List.at</span>
+</span></code></pre></div>
+<p>Uma projeção de um <em>escalar</em> (<code>yields int</code>) é escrita através de <code>.value</code> — <code>score.cell(i).value = 9</code> — já que não há membro para auto-deref. Dentro de um corpo <code>yields</code> o compilador permite o <code>ref</code> enraizado no receiver de que ele precisa; chamadores nunca veem um ponteiro.</p>
+<h2 id="grafos-e-identidade-compartilhada-poolt-handle-ou-indices">Grafos e identidade compartilhada — <code>Pool(T)</code> + <code>Handle</code>, ou índices<a class="headerlink" href="#grafos-e-identidade-compartilhada-poolt-handle-ou-indices" title="Permanent link">&para;</a></h2>
+<p>Posse única expressa árvores. Para <strong>ciclos, referências de volta e lifetimes em formato ECS</strong> (entidades que se referenciam e morrem independentemente), a resposta da DLang é <em>índices em vez de ponteiros</em>:</p>
+<ul>
+<li><strong><code>Pool(T)</code> + <code>Handle</code></strong> (<code>import("std/collections/pool")</code>): um armazém de slots com <strong>handles geracionais</strong>. <code>Handle { slot, gen }</code> é um valor copiável comum — guarde em campos, listas, outras entidades; ciclos são de graça. Matar uma entidade incrementa a geração do slot, então toda cópia velha do handle fica <em>detectavelmente morta</em> (<code>alive(h) == false</code>) em vez de pendente:</li>
+</ul>
+<div class="language-dlang highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">inline</span><span class="w"> </span><span class="k">import</span><span class="p">(</span><span class="s">&quot;std/collections/pool&quot;</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">var</span><span class="w"> </span><span class="n">mobs</span><span class="p">:</span><span class="w"> </span><span class="kt">Pool</span><span class="p">(</span><span class="n">Mob</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Pool</span><span class="p">(</span><span class="n">Mob</span><span class="p">).</span><span class="n">empty</span><span class="p">()</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">val</span><span class="w"> </span><span class="n">h</span><span class="p">:</span><span class="w"> </span><span class="n">Handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mobs</span><span class="p">.</span><span class="k">spawn</span><span class="p">(</span><span class="n">Mob</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">hp</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">alvo</span><span class="p">:</span><span class="w"> </span><span class="n">Handle</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">slot</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gen</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mobs</span><span class="p">.</span><span class="n">alive</span><span class="p">(</span><span class="n">h</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="n">mobs</span><span class="p">.</span><span class="n">at</span><span class="p">(</span><span class="n">h</span><span class="p">).</span><span class="n">hp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span><span class="w">        </span><span class="c1">// .at(h) é uma projeção, mesmas regras de List.at</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">mobs</span><span class="p">.</span><span class="n">kill</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="w">               </span><span class="c1">// idempotente; o slot é reciclado por um spawn futuro</span>
+</span></code></pre></div>
+<ul>
+<li><strong>A codificação por índice</strong>: para armazéns append-only (uma AST, uma tabela de interning), índices <code>int</code> simples numa <code>List(Node)</code> funcionam direto — um índice não pende num armazém que nunca encolhe. É assim que o próprio compilador da DLang representa suas árvores de sintaxe.</li>
+</ul>
+<p><strong>Não há blocos de região/arena na linguagem.</strong> O antigo tier <code>region { … }</code> / <code>detach</code> foi removido quando o modelo MVS puro chegou (escrevê-los é <code>E_NOT_SUPPORTED</code>, com uma dica de migração): tudo que uma região fazia é coberto por donos que morrem no último uso, <code>Pool</code>/índices para grafos e parâmetros <code>set</code> para construir resultados in place.</p>
+<h2 id="a-lei-de-fronteira-nada-de-memoria-crua-fora-do-piso">A lei de fronteira — nada de memória crua fora do piso<a class="headerlink" href="#a-lei-de-fronteira-nada-de-memoria-crua-fora-do-piso" title="Permanent link">&para;</a></h2>
+<p><code>Ptr(T)</code>, <code>New</code>, <code>Undo</code>, <code>ref</code> e <code>_alloc.*</code> ainda existem — são o material de que <code>List</code> e <code>string</code> são <em>feitas</em> — mas estão confinados ao <strong>piso Builtin</strong>. Operações cruas são legais apenas:</p>
+<ol>
+<li>dentro dos métodos de um <strong>handle dono</strong> <code>nocopy</code> + <code>deinit</code> (a superfície de implementação crua de <code>List</code>, <code>Map</code>, <code>ByteBuf</code>, seus próprios invólucros de recursos),</li>
+<li>em <strong>assinaturas extern C</strong> (declarações FFI sem corpo),</li>
+<li>na implementação da própria <code>string</code>,</li>
+<li>em corpos de acessores <code>yields</code> (o <code>ref</code> enraizado no receiver),</li>
+<li>nos hooks fixos do runtime.</li>
+</ol>
+<p>Em qualquer outro lugar — uma assinatura, um campo de struct, um local, uma alocação em código comum — é <strong><code>E_RAW_OUTSIDE_BUILTIN</code></strong>, em todo build, <strong>sem allowlist de módulos</strong>: a biblioteca padrão obedece à mesma lei, e o compilador está migrando as próprias fontes para ela. <code>--raw-floor</code> desliga a lei apenas para código abaixo do modelo (o bootstrap do compilador e os harnesses de prova que introspectam o alocador); não é para aplicações.</p>
+<p>Buffers de FFI cruzam fronteiras de API como endereços <code>long</code> opacos (<code>ByteBuf.addr(i)</code>, <code>cast(long, s.cstr())</code>), e um recurso possuído por C é embrulhado num handle dono cujo <code>deinit</code> o libera exatamente uma vez. Veja <a href="13-manual-memory.html">Memória Manual</a> para o piso completo.</p>
+<h2 id="strings-e-recuperacao-asap">Strings e recuperação ASAP<a class="headerlink" href="#strings-e-recuperacao-asap" title="Permanent link">&para;</a></h2>
+<p><code>string</code> é um valor com posse gerenciada pelo compilador: temporários de interpolação e <code>+</code>, argumentos de <code>println</code> e locais de acumulação (<code>var s</code> … <code>s = s + pedaço</code> num laço) são liberados <strong>na hora</strong> por drops inseridos pelo compilador. O idioma de acumulação é, portanto, o jeito <em>preferido</em> de construir strings — ele não vaza mais. (Continua sendo O(n²) de cópia para saídas muito grandes; use junção divide-e-conquista nessas.)</p>
+<h2 id="os-codigos-de-erro">Os códigos de erro<a class="headerlink" href="#os-codigos-de-erro" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Código</th>
+<th>Forma de programa rejeitada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>E_USE_AFTER_MOVE</code></td>
+<td>usar / reconsumir um valor afim depois de movido</td>
+</tr>
+<tr>
+<td><code>E_IMMUTABLE</code></td>
+<td>escrever através de um parâmetro simples (borrow)</td>
+</tr>
+<tr>
+<td><code>E_EXCLUSIVITY</code></td>
+<td>argumentos <code>inout</code> apelidados; tocar um dono enquanto sua projeção vive</td>
+</tr>
+<tr>
+<td><code>E_REF_ESCAPES</code></td>
+<td>um borrow ou projeção escapando da sua chamada / escopo de statement</td>
+</tr>
+<tr>
+<td><code>E_SET_UNASSIGNED</code> / <code>E_SET_BEFORE_ASSIGN</code></td>
+<td>um slot <code>set</code> não atribuído em todo caminho / lido cedo demais</td>
+</tr>
+<tr>
+<td><code>E_RAW_OUTSIDE_BUILTIN</code></td>
+<td>qualquer vocabulário de memória crua fora do piso sancionado</td>
+</tr>
+<tr>
+<td><code>E_NOT_SUPPORTED</code></td>
+<td>o tier removido <code>region</code> / <code>detach</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="tecnicas-e-trabalhos-anteriores">Técnicas e trabalhos anteriores<a class="headerlink" href="#tecnicas-e-trabalhos-anteriores" title="Permanent link">&para;</a></h2>
+<p>O modelo é uma síntese de técnicas estabelecidas — a contribuição da DLang é o compromisso com a combinação <em>pura</em>, sem sobrar nenhum tier inseguro visível ao usuário:</p>
+<ul>
+<li><strong>Mutable Value Semantics</strong> — valores com posse única, mutação só através do dono, sem referências de primeira classe: <strong>Hylo</strong> (ex-Val). DLang é uma implementação purista de Hylo com sua própria superfície de palavras-chave.</li>
+<li><strong>Convenções de passagem de parâmetro</strong> (<code>borrow</code> / <code>inout</code> / <code>sink</code> / <code>set</code>) e <strong>referências de segunda classe</strong> — também do <strong>Hylo</strong>, espelhadas pelos modificadores <code>borrowing</code>/<code>consuming</code> do <strong>Swift</strong>; <code>set</code> é a convenção de out-inicialização do Hylo.</li>
+<li><strong>Lei da Exclusividade</strong> — acesso mutável exclusivo, do <strong>Swift</strong> (SE-0176).</li>
+<li><strong>Projeções</strong> — acessores <code>yields</code> no estilo subscript são as corrotinas de acessor do Hylo (e do Swift); o travamento de raiz em tempo de compilação substitui verificações de exclusividade em runtime.</li>
+<li><strong>Tipos afins / semântica de move</strong> — <code>nocopy</code> é a disciplina de posse do <strong>Rust</strong>, os tipos lineares do <strong>Austral</strong>, as abilities do <strong>Move</strong>.</li>
+<li><strong>Destruição ASAP sem drop flags</strong> — da destruição ASAP do <strong>Mojo</strong> e da análise de reuso do <strong>Perceus</strong> (Koka).</li>
+<li><strong>Índices geracionais</strong> — <code>Pool(T)</code> + <code>Handle</code> é o idioma ECS em que Hylo e a comunidade Rust de gamedev convergiram: obsolescência dinâmica em vez de lifetimes léxicos.</li>
+</ul>
+<p>Uma iteração anterior do modelo também tinha regiões léxicas no estilo Tofte–Talpin para grafos de ponteiros; foram <strong>deletadas</strong> quando projeções, <code>set</code> e <code>Pool</code> se provaram suficientes — uma zona crua léxica era o único lugar onde a alegação de segurança ficava condicional, e o Hylo demonstra que o modelo se sustenta sem ela.</p>
+<h2 id="as-garantias-de-relance">As garantias, de relance<a class="headerlink" href="#as-garantias-de-relance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Bug</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>use-after-free / liberação dupla</td>
+<td><strong>erro de compilação</strong> (<code>E_USE_AFTER_MOVE</code>)</td>
+</tr>
+<tr>
+<td>referência pendente</td>
+<td>irrepresentável — referências nunca escapam de uma chamada</td>
+</tr>
+<tr>
+<td>mutação com alias</td>
+<td><strong>erro de compilação</strong> (<code>E_EXCLUSIVITY</code>)</td>
+</tr>
+<tr>
+<td>projeção pendendo através de um grow</td>
+<td><strong>erro de compilação</strong> (trava de raiz / <code>E_REF_ESCAPES</code>)</td>
+</tr>
+<tr>
+<td>handle de entidade obsoleto</td>
+<td><strong>detectável</strong> (<code>pool.alive(h) == false</code>), nunca pendente</td>
+</tr>
+<tr>
+<td>ponteiro cru em código de aplicação</td>
+<td><strong>erro de compilação</strong> (<code>E_RAW_OUTSIDE_BUILTIN</code>)</td>
+</tr>
+<tr>
+<td>limpeza esquecida</td>
+<td>impossível — <code>deinit</code> é automático, exatamente uma vez, ASAP</td>
+</tr>
+<tr>
+<td>custo de runtime de tudo isso</td>
+<td><strong>zero</strong> — inteiramente estático</td>
+</tr>
+</tbody>
+</table>
+<h2 id="relacionados">Relacionados<a class="headerlink" href="#relacionados" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="13-manual-memory.html">Memória Manual — o piso Builtin</a></li>
+<li><a href="14-garbage-collection.html">Coleta de Lixo (por que não há)</a></li>
+<li><a href="18-dynamic-allocation.html">Alocação Dinâmica — valores donos</a></li>
+<li><a href="12-pointers-and-references.html">Ponteiros e Referências</a></li>
+<li><a href="10-parameter-passing.html">Passagem de Parâmetros</a></li>
+<li><a href="21-constructors-and-destructors.html">Construtores e Destrutores</a></li>
+</ul>
+<p><a href="index.html">← Índice</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar ao topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.indexes", "toc.integrate", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "Mais 1 nesta p\u00e1gina", "search.result.more.other": "Mais # nesta p\u00e1gina", "search.result.none": "Nenhum resultado encontrado", "search.result.one": "1 resultado encontrado", "search.result.other": "# resultados encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
